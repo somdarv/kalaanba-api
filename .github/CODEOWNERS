@@ -1,0 +1,32 @@
+# CODEOWNERS for Kalaanba
+# Set actual GitHub usernames/teams before relying on these gates.
+# Until owners exist, these entries serve as documentation of who *should* review.
+
+# --- Engine documentation ---
+/docs/engines/club/                       @club-owners
+/docs/engines/player-affiliation/         @player-owners
+/docs/engines/match-fixture/              @match-owners
+/docs/engines/season/                     @season-owners
+/docs/engines/rp-economy/                 @rp-economy-owners
+/docs/engines/challenge/                  @challenge-owners
+/docs/engines/trust-verification/         @trust-owners
+/docs/engines/zone/                       @zone-owners
+/docs/engines/venue-surface-booking/      @venue-owners
+/docs/engines/referee-officiator/         @referee-owners
+/docs/engines/notification-distribution/  @notification-owners
+/docs/engines/fan-buzz/                   @buzz-owners
+/docs/engines/moderation-safety/          @moderation-owners
+/docs/engines/admin-governance/           @governance-owners
+/docs/engines/competition-rules/          @competition-owners
+/docs/engines/awards-recognition/         @awards-owners
+/docs/engines/analytics/                  @analytics-owners
+
+# --- Contracts (architecture council) ---
+/contracts/events/                        @architecture-council
+/contracts/api/                           @architecture-council
+/contracts/config/                        @architecture-council
+
+# --- Architecture & ADRs ---
+/docs/adr/                                @architecture-council
+/docs/Architecture/                       @architecture-council
+/.github/                                 @architecture-council

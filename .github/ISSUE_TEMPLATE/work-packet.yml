@@ -1,0 +1,65 @@
+name: Work Packet
+description: A structured unit of work that flows through the Kalaanba agent pipeline.
+title: "[WP] "
+labels: ["work-packet"]
+body:
+  - type: input
+    id: wp_id
+    attributes:
+      label: Work Packet ID
+      placeholder: WP-YYYYMMDD-slug
+    validations:
+      required: true
+  - type: input
+    id: primary_engine
+    attributes:
+      label: Primary engine
+      placeholder: e.g. rp-economy
+    validations:
+      required: true
+  - type: textarea
+    id: secondary_engines
+    attributes:
+      label: Secondary engines
+      placeholder: List affected engines (one per line).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+    validations:
+      required: true
+  - type: textarea
+    id: user_value
+    attributes:
+      label: User value
+  - type: textarea
+    id: success
+    attributes:
+      label: Success criteria
+    validations:
+      required: true
+  - type: textarea
+    id: config_values
+    attributes:
+      label: Configurable values involved
+      placeholder: List config keys (in contracts/config/) that must be created or referenced.
+  - type: input
+    id: build_plan_stage
+    attributes:
+      label: Build Plan stage advanced
+      placeholder: e.g. Stage 5, Phase 5.1 — RP Economy Engine
+  - type: checkboxes
+    id: pipeline
+    attributes:
+      label: Pipeline stages
+      options:
+        - label: 1. Intake (Product Steward)
+        - label: 2. Impact Map (Product Steward)
+        - label: 3. Rules Review (Engine Owner per engine)
+        - label: 4. Architecture Check (Architect)
+        - label: 5. Contract Design (Contract Designer)
+        - label: 6. Implementation (Implementer)
+        - label: 7. Security Review (Security Reviewer)
+        - label: 8. QA Plan + Tests (QA Engineer)
+        - label: 9. Docs Update (Docs Scribe)
+        - label: 10. Release Packet (Release Captain)
