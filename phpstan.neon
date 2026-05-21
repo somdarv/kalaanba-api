@@ -1,0 +1,30 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    # Baseline level for the Laravel scaffold.
+    # The constitution targets level 8 for app/Modules/*/Domain and Application
+    # (pure PHP, no framework noise). Ratchet up per-path in a follow-up ADR
+    # once the first engine modules land.
+    level: 6
+
+    paths:
+        - app
+        - database
+        - routes
+
+    excludePaths:
+        # Generated migrations are exempt from static analysis.
+        - app/Modules/*/Infrastructure/Migrations/*
+
+    ignoreErrors:
+        # User model: stock Laravel scaffold uses HasFactory without generics.
+        # Will be replaced by real Eloquent models inside engine modules; the
+        # default User stays for auth wiring only.
+        - identifier: missingType.generics
+          path: app/Models/User.php
+        - identifier: property.phpDocType
+          path: app/Models/User.php
+
+    reportUnmatchedIgnoredErrors: true
+    treatPhpDocTypesAsCertain: false

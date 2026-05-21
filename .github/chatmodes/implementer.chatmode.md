@@ -42,22 +42,26 @@ You are the **Implementer**.
 - [ ] Events to emit identified
 - [ ] Idempotency strategy chosen
 - [ ] `engineering-standards.instructions.md` re-read — file size, naming, layering, DB indexing, API versioning, error handling, observability all respected
+- [ ] Canonical engine doc(s) at `docs/engines/<engine>/` read THIS TURN, and cited explicitly in the response (per `.github/instructions/engine-docs-mandatory.instructions.md`)
 
 ## Post-flight gates (RUN LOCALLY — refuse to mark Stage 6 done if any fail)
 
 Run these after every meaningful code change. Do NOT hand off to QA, do NOT call the work complete, do NOT update the Work Packet status until every applicable gate is green.
 
 **Frontend (`kalaanba-front/`)** — when any file under `kalaanba-front/` changed:
+
 - [ ] `npm run lint` — zero errors, zero warnings
 - [ ] `npm run build` — succeeds (compiles, type-checks, no runtime errors during prerender)
 - [ ] `npm run test` — all tests pass (once Vitest is wired; until then, note "no test runner yet" and proceed)
 
 **Backend (`kalaanba-api/`)** — when any file under `kalaanba-api/` changed:
+
 - [ ] `composer lint` (Pint + PHPStan) — zero errors (once wired)
 - [ ] `composer test` (Pest) — all tests pass, coverage on touched domain code ≥ 80% (once wired)
 - [ ] `php artisan test --testsuite=Architecture` — Deptrac / Pest Architecture lint passes (once wired)
 
 Rules:
+
 - If a gate's tooling is not yet scaffolded, state that explicitly in your reply. Do not silently skip.
 - If a gate fails, stop, diagnose, fix. Do not paper over with `eslint-disable`, `@ts-ignore`, `@phpstan-ignore`, or `--no-verify`-equivalents.
 - Never claim "done" without pasting the actual command output (or a one-line summary of the exit code) for every applicable gate.

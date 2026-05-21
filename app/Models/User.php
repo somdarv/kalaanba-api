@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
+use Kalaanba\Support\Auth\Role;
+use Laravel\Sanctum\HasApiTokens;
+
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property Role $role
+ * @property string|null $phone_e164_hash
+ * @property string|null $phone_e164_last4
+ * @property Carbon|null $email_verified_at
+ * @property Carbon|null $archived_at
+ * @property Carbon|null $last_seen_at
+ * @property-read bool $is_active
+ */
+class User extends Authenticatable
+{
+    use HasApiTokens;
+    use HasFactory;
+    use Notifiable;
+
+    /**
+     * Mass-assignment is intentionally narrow. Role + archive timestamps are
+     * set explicitly through application services — no controller may flip
+     * a role via request payload (engineering-standards §11).
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'phone_e164_hash',
+        'phone_e164_last4',
+    ];
+
+    /**
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'phone_e164_hash',
+    ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'archived_at' => 'datetime',
+            'last_seen_at' => 'datetime',
+            'password' => 'hashed',
+            'role' => Role::class,
+        ];
+    }
+
+    protected function isActive(): Attribute
+    {
+        return Attribute::get(fn (): bool => $this->archived_at === null);
+    }
+}

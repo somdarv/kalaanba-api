@@ -1,0 +1,85 @@
+# Deptrac configuration — Kalaanba modular monolith.
+# Enforces:
+#   1. Layered architecture inside each engine module (Domain ← Application ← Http; Domain ← Infrastructure).
+#   2. Module isolation: no module may directly use another module's internals.
+#
+# Cross-module communication is allowed ONLY via:
+#   - Outbox events (published from Infrastructure, consumed via App\Bus subscribers in another module's Application layer)
+#   - Shared interfaces under Kalaanba\Support\Contracts
+#
+# See: .github/instructions/engineering-standards.instructions.md §3 (Reusability) and §4 (Laravel best practices).
+
+deptrac:
+  paths:
+    - ./app
+
+  exclude_files:
+    - "#.*test.*#i"
+
+  layers:
+    # --- Per-module layers (use the regex to capture every module folder under app/Modules) ---
+    - name: ModuleDomain
+      collectors:
+        - type: classLike
+          value: ^Kalaanba\\Modules\\[A-Z][A-Za-z0-9]+\\Domain\\.*$
+
+    - name: ModuleApplication
+      collectors:
+        - type: classLike
+          value: ^Kalaanba\\Modules\\[A-Z][A-Za-z0-9]+\\Application\\.*$
+
+    - name: ModuleInfrastructure
+      collectors:
+        - type: classLike
+          value: ^Kalaanba\\Modules\\[A-Z][A-Za-z0-9]+\\Infrastructure\\.*$
+
+    - name: ModuleHttp
+      collectors:
+        - type: classLike
+          value: ^Kalaanba\\Modules\\[A-Z][A-Za-z0-9]+\\Http\\.*$
+
+    # --- Cross-cutting layers ---
+    - name: Support
+      collectors:
+        - type: classLike
+          value: ^Kalaanba\\Support\\.*$
+
+    - name: Framework
+      collectors:
+        - type: classLike
+          value: ^Illuminate\\.*$
+        - type: classLike
+          value: ^Symfony\\.*$
+        - type: classLike
+          value: ^Laravel\\.*$
+
+  ruleset:
+    # Domain layer is framework-agnostic. No Illuminate/Symfony/Laravel imports.
+    ModuleDomain:
+      - Support
+
+    # Application orchestrates Domain. May call Support and framework (for jobs, events).
+    ModuleApplication:
+      - ModuleDomain
+      - Support
+      - Framework
+
+    # Infrastructure implements Domain ports. Has full framework access.
+    ModuleInfrastructure:
+      - ModuleDomain
+      - Support
+      - Framework
+
+    # Http is thin: routes/controllers/requests/resources.
+    ModuleHttp:
+      - ModuleApplication
+      - ModuleDomain
+      - Support
+      - Framework
+
+    Support:
+      - Framework
+
+  # Forbid cross-module direct calls. Uncomment and customise once modules exist.
+  # See docs/engine-boundaries.md for the cross-module event contract.
+  skip_violations: {}

@@ -20,6 +20,8 @@ You are the **Architect** for Kalaanba.
    - Money uses floats instead of integer minor units.
    - The outbox pattern is bypassed for cross-engine effects.
    - A rule from `.github/instructions/engineering-standards.instructions.md` is violated without an ADR justifying the exception (file size, layering, API versioning, indexing strategy, error envelope, pagination, etc.).
+   - The proposal contradicts the canonical engine doc(s) under `docs/engines/<engine>/` and no ADR is offered to override (per `.github/instructions/engine-docs-mandatory.instructions.md`).
+   - The Architecture Review does not cite the engine doc(s) that govern the change.
 
 ## Output format
 

@@ -20,6 +20,7 @@
 
 ## Engine Boundary Self-Check
 
+- [ ] Canonical engine doc(s) at `docs/engines/<engine>/` were read for this change and cited in the PR description (per `.github/instructions/engine-docs-mandatory.instructions.md`).
 - [ ] This PR does not cross engine boundaries except via events/contracts.
 - [ ] No hardcoded configurable values.
 - [ ] Audit/ledger entries created where required.
@@ -36,22 +37,26 @@
 Reference: [`.github/instructions/engineering-standards.instructions.md`](.github/instructions/engineering-standards.instructions.md)
 
 **File & module shape**
+
 - [ ] No source file exceeds 400 lines.
 - [ ] No function exceeds 50 lines; no class exceeds 250 lines.
 - [ ] Each file has a single responsibility.
 
 **Naming & layering**
+
 - [ ] Naming follows the standards (verbs for functions, booleans `is/has/can`, `engine.action` events, snake_case internal keys).
 - [ ] Domain code is framework-agnostic; controllers are thin; repositories own queries.
 - [ ] Frontend has no business calculation; UI consumes hooks, hooks consume the API client.
 
 **Database**
+
 - [ ] Every new FK is indexed.
 - [ ] Hot-path queries have been `EXPLAIN`-ed; composite/partial indexes added where needed.
 - [ ] Migrations are reversible and split (schema vs backfill).
 - [ ] No cross-schema foreign keys.
 
 **API**
+
 - [ ] All new endpoints live under `/api/v1/` (or current major). No silent breaking changes.
 - [ ] Standard envelope + error shape used.
 - [ ] Pagination on every list endpoint.
@@ -59,21 +64,23 @@ Reference: [`.github/instructions/engineering-standards.instructions.md`](.githu
 - [ ] Generated TS client regenerated and committed.
 
 **Events**
+
 - [ ] Events follow `engine.action_past_tense` and carry the canonical envelope.
 - [ ] `schema_version` bumped if payload shape changed.
 - [ ] Producer writes outbox in same transaction as the domain write.
 - [ ] Consumers are idempotent.
 
 **Errors, logs, security**
+
 - [ ] Typed domain exceptions; no `catch (\Throwable)` in domain.
 - [ ] Structured JSON logs; no secrets/PII/OTPs/evidence URLs in logs.
 - [ ] Inputs validated by FormRequest **and** Zod where relevant.
 
 **Tests**
+
 - [ ] ≥ 80% coverage on domain code touched.
 - [ ] Contract test added for every new event and endpoint.
 - [ ] Config-flip test added for every new config key.
-
 
 ## Contracts touched
 
