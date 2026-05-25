@@ -6,10 +6,13 @@
     "license": "proprietary",
     "require": {
         "php": "^8.2",
+        "filament/filament": "3.3",
         "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^2.9",
-        "predis/predis": "*"
+        "predis/predis": "*",
+        "sentry/sentry-laravel": "*",
+        "stechstudio/filament-impersonate": "3.16"
     },
     "require-dev": {
         "deptrac/deptrac": "3.*",

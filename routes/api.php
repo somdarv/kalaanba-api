@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\SessionController;
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Notifications\MyInboxController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function (): void {
+    // Liveness + dependency probe. Phase 0.8 — Observability Lite.
+    // Unauthenticated by design; surfaces DB + Redis reachability.
+    Route::get('health', HealthController::class)->name('health');
+
     Route::prefix('auth')->group(function (): void {
         Route::middleware(['throttle:auth', 'idempotency'])
             ->post('sessions', [SessionController::class, 'store'])

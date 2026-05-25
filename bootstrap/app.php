@@ -1,12 +1,15 @@
 <?php
 
+use App\Http\Middleware\TouchLastSeenAt;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Kalaanba\Support\Http\Middleware\AdminAuditMiddleware;
 use Kalaanba\Support\Http\Middleware\IdempotencyKeyMiddleware;
+use Kalaanba\Support\Http\Middleware\RequestIdMiddleware;
 use Kalaanba\Support\Http\Middleware\RequireSuperAdminMiddleware;
 use Kalaanba\Support\Http\Middleware\ScopeMiddleware;
+use Sentry\Laravel\Integration;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -25,12 +28,22 @@ return Application::configure(basePath: dirname(__DIR__))
             'super_admin' => RequireSuperAdminMiddleware::class,
         ]);
 
+        // Request-id MUST run first on the api group so every downstream
+        // middleware, log line, audit row, and Sentry event carries the
+        // same correlation id (Phase 0.8 — Observability Lite).
+        $middleware->prependToGroup('api', [
+            RequestIdMiddleware::class,
+        ]);
+
         // Auto-audit every authenticated mutating call by a platform admin.
         // Engines never write to admin_audit_log directly (Constitution Law 5).
         $middleware->appendToGroup('api', [
             AdminAuditMiddleware::class,
+            TouchLastSeenAt::class,
         ]);
     })
-    ->withExceptions(function (Exceptions $exceptions) {
-        //
+    ->withExceptions(function (Exceptions $exceptions): void {
+        // Wires Sentry's exception reporter. No-op when SENTRY_LARAVEL_DSN
+        // is empty (sentry-laravel handles that gracefully).
+        Integration::handles($exceptions);
     })->create();

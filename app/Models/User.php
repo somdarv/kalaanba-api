@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -25,7 +27,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property Carbon|null $last_seen_at
  * @property-read bool $is_active
  */
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens;
     use HasFactory;
@@ -72,5 +74,25 @@ class User extends Authenticatable
     protected function isActive(): Attribute
     {
         return Attribute::get(fn (): bool => $this->archived_at === null);
+    }
+
+    /**
+     * Filament panel gate (ADR-0002): only Super Admins access `/admin`.
+     *
+     * Archived users are also denied even if they hold the Super Admin role,
+     * matching the engineering-standards L11 “archive, don't delete” rule —
+     * archive is the kill-switch.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        if ($panel->getId() !== 'admin') {
+            return false;
+        }
+
+        if ($this->archived_at !== null) {
+            return false;
+        }
+
+        return $this->role->isSuperAdmin();
     }
 }

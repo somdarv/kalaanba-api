@@ -1,8 +1,7 @@
 <?php
 
-declare(strict_types=1);
-
 use App\Providers\AppServiceProvider;
+use App\Providers\Filament\AdminPanelProvider;
 use Kalaanba\Modules\AdminGovernance\AdminGovernanceServiceProvider;
 use Kalaanba\Modules\Analytics\AnalyticsServiceProvider;
 use Kalaanba\Modules\AwardsRecognition\AwardsRecognitionServiceProvider;
@@ -23,8 +22,7 @@ use Kalaanba\Modules\Zone\ZoneServiceProvider;
 
 return [
     AppServiceProvider::class,
-
-    // Engine modules (one provider per engine, in canonical order).
+    AdminPanelProvider::class,
     AdminGovernanceServiceProvider::class,
     AnalyticsServiceProvider::class,
     AwardsRecognitionServiceProvider::class,
