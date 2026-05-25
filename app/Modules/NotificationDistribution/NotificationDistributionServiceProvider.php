@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Kalaanba\Modules\NotificationDistribution;
 
 use Illuminate\Support\ServiceProvider;
+use Kalaanba\Modules\NotificationDistribution\Domain\InboxRepository;
+use Kalaanba\Modules\NotificationDistribution\Infrastructure\Eloquent\PostgresInboxRepository;
 
 /**
  * Service provider for the NotificationDistribution engine module.
@@ -26,7 +28,7 @@ final class NotificationDistributionServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Bind Domain ports to Infrastructure adapters here.
+        $this->app->bind(InboxRepository::class, PostgresInboxRepository::class);
     }
 
     public function boot(): void
