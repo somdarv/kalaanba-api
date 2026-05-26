@@ -25,6 +25,12 @@ final class SchemaCatalogue
     {
         return [
             HealthPingSchema::definition(),
+            SeasonPhaseChangedSchema::definition(),
+            SeasonCutoffPassedSchema::definition(),
+            SeasonRpResetDueSchema::definition(),
+            ZoneAreaSuggestedSchema::definition(),
+            ZoneAreaApprovedSchema::definition(),
+            ZoneAreaRejectedSchema::definition(),
         ];
     }
 

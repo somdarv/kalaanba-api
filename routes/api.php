@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\ConfigController;
+use App\Http\Controllers\Admin\Zone\AreaSuggestionController as AdminZoneAreaSuggestionController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\HealthController;
@@ -45,6 +47,24 @@ Route::prefix('v1')->group(function (): void {
     Route::prefix('admin')->middleware(['auth:sanctum', 'super_admin'])->group(function (): void {
         Route::get('audit-log', [AuditLogController::class, 'index'])
             ->name('admin.audit-log.index');
+
+        Route::get('configs', [ConfigController::class, 'index'])
+            ->name('admin.configs.index');
+
+        Route::prefix('zone')->group(function (): void {
+            Route::get('area-suggestions', [AdminZoneAreaSuggestionController::class, 'index'])
+                ->name('admin.zone.area-suggestions.index');
+
+            Route::middleware('idempotency')
+                ->post('area-suggestions/{id}/approve', [AdminZoneAreaSuggestionController::class, 'approve'])
+                ->whereUuid('id')
+                ->name('admin.zone.area-suggestions.approve');
+
+            Route::middleware('idempotency')
+                ->post('area-suggestions/{id}/reject', [AdminZoneAreaSuggestionController::class, 'rejectSuggestion'])
+                ->whereUuid('id')
+                ->name('admin.zone.area-suggestions.reject');
+        });
     });
 
     Route::prefix('me/notifications')->middleware(['auth:sanctum'])->group(function (): void {

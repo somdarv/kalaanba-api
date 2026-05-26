@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Kalaanba\Modules\Zone;
 
 use Illuminate\Support\ServiceProvider;
+use Kalaanba\Modules\Zone\Domain\AreaSuggestionRepository;
+use Kalaanba\Modules\Zone\Domain\GeographyReader;
+use Kalaanba\Modules\Zone\Infrastructure\Eloquent\EloquentAreaSuggestionRepository;
+use Kalaanba\Modules\Zone\Infrastructure\Eloquent\EloquentGeographyReader;
 
 /**
  * Service provider for the Zone engine module.
@@ -26,7 +30,8 @@ final class ZoneServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Bind Domain ports to Infrastructure adapters here.
+        $this->app->bind(GeographyReader::class, EloquentGeographyReader::class);
+        $this->app->bind(AreaSuggestionRepository::class, EloquentAreaSuggestionRepository::class);
     }
 
     public function boot(): void

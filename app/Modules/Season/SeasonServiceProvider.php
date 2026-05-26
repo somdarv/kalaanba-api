@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace Kalaanba\Modules\Season;
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\ServiceProvider;
+use Kalaanba\Modules\Season\Domain\SeasonConfigProvider;
+use Kalaanba\Modules\Season\Domain\SeasonRepository;
+use Kalaanba\Modules\Season\Http\Console\SeasonTickCommand;
+use Kalaanba\Modules\Season\Infrastructure\Config\AdminConfigSeasonConfigLoader;
+use Kalaanba\Modules\Season\Infrastructure\Eloquent\EloquentSeasonRepository;
 
 /**
  * Service provider for the Season engine module.
@@ -15,8 +21,7 @@ use Illuminate\Support\ServiceProvider;
  *
  * Responsibilities:
  *  - Bind Domain interfaces (ports) to Infrastructure adapters.
- *  - Load this module's routes from Http/routes.php (when present).
- *  - Register this module's event subscribers / listeners.
+ *  - Register the season:tick artisan command + 15-minute schedule.
  *
  * MUST NOT:
  *  - Reach into another module's namespace directly.
@@ -26,11 +31,23 @@ final class SeasonServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Bind Domain ports to Infrastructure adapters here.
+        $this->app->bind(SeasonRepository::class, EloquentSeasonRepository::class);
+        $this->app->bind(SeasonConfigProvider::class, AdminConfigSeasonConfigLoader::class);
     }
 
     public function boot(): void
     {
-        // Load module-scoped routes, migrations, translations, etc.
+        if ($this->app->runningInConsole()) {
+            $this->commands([SeasonTickCommand::class]);
+
+            $this->app->booted(function (): void {
+                /** @var Schedule $schedule */
+                $schedule = $this->app->make(Schedule::class);
+                $schedule->command('season:tick')
+                    ->everyFifteenMinutes()
+                    ->withoutOverlapping()
+                    ->runInBackground();
+            });
+        }
     }
 }

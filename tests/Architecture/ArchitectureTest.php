@@ -141,3 +141,46 @@ arch('AdminAuditEntry is a readonly value object')
 // arch('<Engine> Application has no facades')
 //     ->expect('Kalaanba\Modules\<Engine>\Application')
 //     ->not->toUse('Illuminate\Support\Facades');
+
+// ============================================================
+// SEASON ENGINE
+// ============================================================
+
+arch('Season Domain has no framework dependencies')
+    ->expect('Kalaanba\Modules\Season\Domain')
+    ->not->toUse(['Illuminate', 'Symfony', 'Laravel']);
+
+arch('Season Application does not reach into Infrastructure')
+    ->expect('Kalaanba\Modules\Season\Application')
+    ->not->toUse('Kalaanba\Modules\Season\Infrastructure');
+
+arch('Season DTOs are readonly')
+    ->expect([
+        'Kalaanba\Modules\Season\Domain\SeasonView',
+        'Kalaanba\Modules\Season\Domain\SeasonWindow',
+        'Kalaanba\Modules\Season\Domain\SeasonConfig',
+    ])
+    ->toBeReadonly();
+
+// ============================================================
+// ZONE ENGINE
+// ============================================================
+
+arch('Zone Domain has no framework dependencies')
+    ->expect('Kalaanba\Modules\Zone\Domain')
+    ->not->toUse(['Illuminate', 'Symfony', 'Laravel']);
+
+arch('Zone Application does not reach into Infrastructure')
+    ->expect('Kalaanba\Modules\Zone\Application')
+    ->not->toUse('Kalaanba\Modules\Zone\Infrastructure');
+
+arch('Zone DTOs are readonly')
+    ->expect([
+        'Kalaanba\Modules\Zone\Domain\Country',
+        'Kalaanba\Modules\Zone\Domain\Region',
+        'Kalaanba\Modules\Zone\Domain\CityHub',
+        'Kalaanba\Modules\Zone\Domain\Zone',
+        'Kalaanba\Modules\Zone\Domain\Area',
+        'Kalaanba\Modules\Zone\Domain\AreaSuggestion',
+    ])
+    ->toBeReadonly();

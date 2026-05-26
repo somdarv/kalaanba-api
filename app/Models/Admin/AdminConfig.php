@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models\Admin;
 
-use App\Modules\AdminGovernance\Domain\Contracts\ConfigRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Kalaanba\Modules\AdminGovernance\Domain\Contracts\ConfigRepository;
 
 /**
  * God Mode read+write surface for `admin_config`.
