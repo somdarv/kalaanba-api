@@ -62,7 +62,7 @@ return new class extends Migration
         if ($driver !== 'pgsql') {
             Schema::create('notification_inbox', function (Blueprint $table): void {
                 $table->uuid('id')->primary();
-                $table->unsignedBigInteger('recipient_user_id')->index();
+                $table->uuid('recipient_user_id')->index();
                 $table->string('template_key', 128);
                 $table->string('category', 32);
                 $table->string('urgency', 16);
@@ -90,7 +90,7 @@ return new class extends Migration
         DB::statement(<<<'SQL'
             CREATE TABLE notification_inbox (
                 id                 UUID         NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-                recipient_user_id  BIGINT       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                recipient_user_id  UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 template_key       VARCHAR(128) NOT NULL,
                 category           notification_inbox_category NOT NULL,
                 urgency            notification_inbox_urgency  NOT NULL DEFAULT 'normal',
@@ -132,7 +132,7 @@ return new class extends Migration
         );
 
         DB::statement(
-            "COMMENT ON TABLE notification_inbox IS "
+            'COMMENT ON TABLE notification_inbox IS '
             ."'In-app notification records owned by the Notification & Distribution engine. "
             ."Each row represents one delivery owed to one user. Archive, never delete (Constitution Law 13).'"
         );

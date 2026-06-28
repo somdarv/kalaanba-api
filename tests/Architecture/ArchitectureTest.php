@@ -100,19 +100,25 @@ arch('Engine modules do not depend on App\\Models\\User directly')
     ->expect('Kalaanba\Modules')
     ->not->toUse('App\Models\User');
 
-// OTP support lives only in the Support layer + is consumed only by the App
-// HTTP layer (no engine module should mint, store, or verify OTPs).
-arch('OTP machinery is confined to Support and App')
+// OTP support lives in the Support layer. Consumers:
+//   - App\ HTTP layer (controllers + factories) — legacy + login flows.
+//   - Identity engine Application layer (auth-owning module per
+//     docs/engines/identity/Identity_Engine_System_Document.md §7).
+//     Registration + channel-bind handlers orchestrate OTP verification
+//     inside a single DB transaction (WP-20260530).
+arch('OTP machinery is confined to Support, App, and Identity Application')
     ->expect('Kalaanba\Support\Auth\Otp')
-    ->toOnlyBeUsedIn(['App\\', 'Kalaanba\\Support']);
+    ->toOnlyBeUsedIn(['App\\', 'Kalaanba\\Support', 'Kalaanba\\Modules\\Identity\\Application', 'Kalaanba\\Modules\\Identity\\IdentityServiceProvider']);
 
 arch('Scope resolver is consumed only by Support and App')
     ->expect('Kalaanba\Support\Auth\Scope')
     ->toOnlyBeUsedIn(['App\\', 'Kalaanba\\Support']);
 
-arch('PhoneHash is consumed only by Support, App, and Database factories')
+// PhoneHash is the canonical phone-fingerprint helper. Identity engine
+// Application handlers need it to dedupe before insert (WP-20260530).
+arch('PhoneHash is consumed only by Support, App, Database factories, and Identity Application')
     ->expect('Kalaanba\Support\Auth\PhoneHash')
-    ->toOnlyBeUsedIn(['App\\', 'Kalaanba\\Support', 'Database\\Factories']);
+    ->toOnlyBeUsedIn(['App\\', 'Kalaanba\\Support', 'Database\\Factories', 'Kalaanba\\Modules\\Identity\\Application', 'Kalaanba\\Modules\\Identity\\IdentityServiceProvider']);
 
 // Admin audit machinery — write side is Support; read side is App. Engine
 // modules MUST NOT touch the audit writer directly (Constitution Law 5).
@@ -184,3 +190,27 @@ arch('Zone DTOs are readonly')
         'Kalaanba\Modules\Zone\Domain\AreaSuggestion',
     ])
     ->toBeReadonly();
+
+// ============================================================
+// IDENTITY ENGINE
+// ============================================================
+
+arch('Identity Domain has no framework dependencies')
+    ->expect('Kalaanba\Modules\Identity\Domain')
+    ->not->toUse(['Illuminate', 'Symfony', 'Laravel']);
+
+arch('Identity Application does not reach into Infrastructure')
+    ->expect('Kalaanba\Modules\Identity\Application')
+    ->not->toUse('Kalaanba\Modules\Identity\Infrastructure');
+
+arch('Identity DTOs are readonly')
+    ->expect([
+        'Kalaanba\Modules\Identity\Domain\ProfileUpdate',
+        'Kalaanba\Modules\Identity\Domain\PublicProfile',
+        'Kalaanba\Modules\Identity\Domain\UserProfileSnapshot',
+    ])
+    ->toBeReadonly();
+
+arch('Identity public projection never imports the User model')
+    ->expect('App\Http\Resources\Identity\PublicUserResource')
+    ->not->toUse('App\Models\User');

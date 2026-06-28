@@ -30,7 +30,7 @@ use Kalaanba\Support\Auth\Role;
  * (it's a POST mutating Livewire action — L5 still applies).
  *
  * @property-read array<string, mixed> $data
- * @property-read \Filament\Forms\Form $form
+ * @property-read Form $form
  */
 class DataInjector extends Page implements HasForms
 {

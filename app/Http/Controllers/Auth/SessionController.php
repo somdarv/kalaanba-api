@@ -30,11 +30,21 @@ final class SessionController extends Controller
         $user = User::query()
             ->where('email', $validated['email'])
             ->whereNull('archived_at')
+            ->whereNull('disabled_at')
             ->first();
 
         if ($user === null || ! Hash::check($validated['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Credentials do not match an active account.'],
+            ]);
+        }
+
+        // WP-20260530: email/password accounts must complete email
+        // verification before login is allowed. Identity engine §7.1
+        // (CLAIMED transition gate) + engineering-standards §11.
+        if ($user->email_verified_at === null) {
+            throw ValidationException::withMessages([
+                'email' => ['auth.email.not_verified'],
             ]);
         }
 

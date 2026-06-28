@@ -17,6 +17,12 @@ namespace Kalaanba\Support\Auth;
  */
 enum Role: string
 {
+    // Universal default — every freshly registered actor starts here. It is
+    // the account-level floor and is never surfaced as a public badge
+    // (Identity Engine doc §9). The only path to a higher role is an audited
+    // admin assignment.
+    case User = 'user';
+
     // Public / unverified actors
     case Fan = 'fan';
     case Player = 'player';
@@ -42,7 +48,7 @@ enum Role: string
      */
     public static function default(): self
     {
-        return self::Fan;
+        return self::User;
     }
 
     /**

@@ -31,6 +31,8 @@ final class SessionResource extends JsonResource
                 'id' => (string) $this->resource->getKey(),
                 'name' => $this->resource->name,
                 'email' => $this->resource->email,
+                'email_verified' => $this->resource->email_verified_at !== null,
+                'phone_bound' => $this->resource->phone_e164_hash !== null,
                 'role' => $this->resource->role->value,
             ],
         ];

@@ -9,6 +9,7 @@ use Kalaanba\Modules\Challenge\ChallengeServiceProvider;
 use Kalaanba\Modules\Club\ClubServiceProvider;
 use Kalaanba\Modules\CompetitionRules\CompetitionRulesServiceProvider;
 use Kalaanba\Modules\FanBuzz\FanBuzzServiceProvider;
+use Kalaanba\Modules\Identity\IdentityServiceProvider;
 use Kalaanba\Modules\MatchFixture\MatchFixtureServiceProvider;
 use Kalaanba\Modules\ModerationSafety\ModerationSafetyServiceProvider;
 use Kalaanba\Modules\NotificationDistribution\NotificationDistributionServiceProvider;
@@ -30,6 +31,7 @@ return [
     ClubServiceProvider::class,
     CompetitionRulesServiceProvider::class,
     FanBuzzServiceProvider::class,
+    IdentityServiceProvider::class,
     MatchFixtureServiceProvider::class,
     ModerationSafetyServiceProvider::class,
     NotificationDistributionServiceProvider::class,

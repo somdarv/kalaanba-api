@@ -48,6 +48,7 @@ Every PR carries the Work Packet ID (`WP-YYYYMMDD-slug`) and must show all 10 bo
 
 | Engine                             | Owns                                                        | Never Owns                          | Canonical doc                             |
 | ---------------------------------- | ----------------------------------------------------------- | ----------------------------------- | ----------------------------------------- |
+| Identity                           | User accounts, OTP auth, role + scope, profile, claim flow  | Football truth, club roles, stats   | `docs/engines/identity/`                  |
 | Club                               | Identity, roles, verification, related-club flags           | Match truth, RP, stats              | `docs/engines/club/`                      |
 | Player & Affiliation               | Player identity, ghost claims, affiliations, verified stats | Match verification, RP              | `docs/engines/player-affiliation/`        |
 | Match / Fixture                    | Match lifecycle, events, lineups                            | Verification verdict, RP, standings | `docs/engines/match-fixture/`             |

@@ -13,11 +13,9 @@ use Kalaanba\Modules\NotificationDistribution\Domain\InboxRepository;
  */
 final class MarkInboxItemSeenService
 {
-    public function __construct(private readonly InboxRepository $repository)
-    {
-    }
+    public function __construct(private readonly InboxRepository $repository) {}
 
-    public function handle(string $id, int $recipientUserId): bool
+    public function handle(string $id, string $recipientUserId): bool
     {
         return $this->repository->markSeen($id, $recipientUserId);
     }

@@ -15,6 +15,5 @@ final readonly class InboxPage
     public function __construct(
         public array $items,
         public ?InboxCursor $nextCursor,
-    ) {
-    }
+    ) {}
 }

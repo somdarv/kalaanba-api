@@ -22,9 +22,17 @@ interface GeographyReader
 
     public function findAreaById(string $id): ?Area;
 
+    /** @return list<CityHub> Active City Hubs, name-ordered. */
+    public function listCityHubs(): array;
+
     /** @return list<Zone> */
     public function listZonesForCityHub(string $cityHubId): array;
 
-    /** @return list<Area> */
-    public function listAreasForCityHub(string $cityHubId): array;
+    /**
+     * Areas inside a City Hub, optionally narrowed by a case-insensitive name
+     * search (engine doc §5 — users pick their area).
+     *
+     * @return list<Area>
+     */
+    public function listAreasForCityHub(string $cityHubId, ?string $search = null): array;
 }

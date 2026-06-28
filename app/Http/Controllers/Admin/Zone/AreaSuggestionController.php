@@ -14,7 +14,6 @@ use Kalaanba\Modules\Zone\Application\RejectAreaSuggestion;
 use Kalaanba\Modules\Zone\Domain\AreaSuggestionRepository;
 use Kalaanba\Modules\Zone\Domain\AreaSuggestionStatus;
 use Kalaanba\Modules\Zone\Domain\GeographyReader;
-use Ramsey\Uuid\Uuid;
 use RuntimeException;
 use Throwable;
 
@@ -38,17 +37,6 @@ final class AreaSuggestionController extends Controller
     private const DEFAULT_LIMIT = 50;
 
     private const MAX_LIMIT = 200;
-
-    /**
-     * Stable namespace for deriving a UUIDv5 from a User integer id.
-     *
-     * Workaround: the application-layer DTOs for Zone reviewer ids are typed
-     * as UUID strings, but `users.id` is currently a BIGINT. Until the user
-     * identity surface is unified to UUID (out-of-scope for this slice), we
-     * derive a deterministic UUID from the auth id so the FK columns remain
-     * UUID-shaped and joinable across the audit trail.
-     */
-    private const REVIEWER_UUID_NAMESPACE = '8c2f9d0a-2c5b-4e3e-9c1e-6a3b1a0e0010';
 
     public function __construct(
         private readonly ApproveAreaSuggestion $approve,
@@ -115,7 +103,7 @@ final class AreaSuggestionController extends Controller
         try {
             $updated = $this->approve->execute(
                 suggestionId: $id,
-                reviewerUserId: $this->reviewerUuid($user),
+                reviewerUserId: (string) $user->getAuthIdentifier(),
                 targetZoneId: $targetZoneId,
                 finalName: $finalName,
                 reviewNote: $reviewNote,
@@ -155,7 +143,7 @@ final class AreaSuggestionController extends Controller
         try {
             $updated = $this->reject->execute(
                 suggestionId: $id,
-                reviewerUserId: $this->reviewerUuid($user),
+                reviewerUserId: (string) $user->getAuthIdentifier(),
                 reviewNote: $reviewNote,
             );
         } catch (Throwable $e) {
@@ -212,14 +200,6 @@ final class AreaSuggestionController extends Controller
         }
 
         return AreaSuggestionStatus::tryFrom($value);
-    }
-
-    private function reviewerUuid(User $user): string
-    {
-        return (string) Uuid::uuid5(
-            self::REVIEWER_UUID_NAMESPACE,
-            'user:'.((string) $user->getAuthIdentifier()),
-        );
     }
 
     private function error(int $status, string $code, string $message, Request $request): JsonResponse

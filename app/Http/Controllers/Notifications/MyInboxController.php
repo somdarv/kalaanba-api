@@ -37,8 +37,7 @@ final class MyInboxController extends Controller
         private readonly MarkInboxItemSeenService $markSeenService,
         private readonly MarkInboxItemActedOnService $markActedOnService,
         private readonly InboxRepository $repository,
-    ) {
-    }
+    ) {}
 
     public function index(ListMyNotificationsRequest $request): JsonResponse
     {
@@ -52,7 +51,7 @@ final class MyInboxController extends Controller
             category: $this->resolveEnum($request->string('category')->toString(), InboxCategory::class),
         );
 
-        $page = $this->listService->handle((int) $user->getKey(), $filters, $cursor, $limit);
+        $page = $this->listService->handle((string) $user->getKey(), $filters, $cursor, $limit);
 
         return new JsonResponse([
             'data' => InboxItemResource::collection(collect($page->items))->resolve(),
@@ -69,7 +68,7 @@ final class MyInboxController extends Controller
         \abort_if($user === null, SymfonyResponse::HTTP_UNAUTHORIZED);
 
         $cap = $this->readConfigInt('notification.inbox.unread_badge_cap', 99);
-        $result = $this->countService->handle((int) $user->getKey(), $cap);
+        $result = $this->countService->handle((string) $user->getKey(), $cap);
 
         return new JsonResponse([
             'data' => [
@@ -85,8 +84,8 @@ final class MyInboxController extends Controller
         $user = $request->user();
         \abort_if($user === null, SymfonyResponse::HTTP_UNAUTHORIZED);
 
-        $this->ensureOwned($id, (int) $user->getKey());
-        $this->markSeenService->handle($id, (int) $user->getKey());
+        $this->ensureOwned($id, (string) $user->getKey());
+        $this->markSeenService->handle($id, (string) $user->getKey());
 
         return new Response('', SymfonyResponse::HTTP_NO_CONTENT);
     }
@@ -96,13 +95,13 @@ final class MyInboxController extends Controller
         $user = $request->user();
         \abort_if($user === null, SymfonyResponse::HTTP_UNAUTHORIZED);
 
-        $this->ensureOwned($id, (int) $user->getKey());
-        $this->markActedOnService->handle($id, (int) $user->getKey());
+        $this->ensureOwned($id, (string) $user->getKey());
+        $this->markActedOnService->handle($id, (string) $user->getKey());
 
         return new Response('', SymfonyResponse::HTTP_NO_CONTENT);
     }
 
-    private function ensureOwned(string $id, int $userId): void
+    private function ensureOwned(string $id, string $userId): void
     {
         $item = $this->repository->findById($id);
         // 404 hides existence on non-ownership (engineering-standards §11).

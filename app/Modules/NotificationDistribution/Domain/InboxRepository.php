@@ -25,7 +25,7 @@ interface InboxRepository
      * already clamped by the caller.
      */
     public function listForRecipient(
-        int $recipientUserId,
+        string $recipientUserId,
         InboxListFilters $filters,
         ?InboxCursor $cursor,
         int $limit,
@@ -38,17 +38,17 @@ interface InboxRepository
      *
      * @return array{count: int, truncated: bool}
      */
-    public function countUnread(int $recipientUserId, int $cap): array;
+    public function countUnread(string $recipientUserId, int $cap): array;
 
     /**
      * Transition an inbox row to `seen`. No-op when the row is already in a
      * terminal status. Returns true when a transition actually occurred.
      */
-    public function markSeen(string $id, int $recipientUserId): bool;
+    public function markSeen(string $id, string $recipientUserId): bool;
 
     /**
      * Transition an inbox row to `acted_on`. No-op on terminal statuses
      * other than `seen` (seen → acted_on is allowed).
      */
-    public function markActedOn(string $id, int $recipientUserId): bool;
+    public function markActedOn(string $id, string $recipientUserId): bool;
 }

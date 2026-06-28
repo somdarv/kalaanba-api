@@ -27,7 +27,7 @@ function createInboxItemFor(User $user, array $overrides = []): string
     $service = app(CreateInboxItemService::class);
 
     return $service->handle(new NewInboxItem(
-        recipientUserId: (int) $user->getKey(),
+        recipientUserId: (string) $user->getKey(),
         templateKey: $overrides['template_key'] ?? 'match.scheduled',
         category: $overrides['category'] ?? InboxCategory::Match,
         urgency: $overrides['urgency'] ?? InboxUrgency::Normal,

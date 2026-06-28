@@ -13,14 +13,12 @@ use Kalaanba\Modules\NotificationDistribution\Domain\InboxRepository;
  */
 final class CountMyUnreadNotificationsService
 {
-    public function __construct(private readonly InboxRepository $repository)
-    {
-    }
+    public function __construct(private readonly InboxRepository $repository) {}
 
     /**
      * @return array{count: int, truncated: bool}
      */
-    public function handle(int $recipientUserId, int $cap): array
+    public function handle(string $recipientUserId, int $cap): array
     {
         return $this->repository->countUnread($recipientUserId, $cap);
     }

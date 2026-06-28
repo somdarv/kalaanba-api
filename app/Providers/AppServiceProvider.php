@@ -115,6 +115,75 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by($phone !== '' ? 'p:'.$phone.'|'.$ipKey : 'ip:'.$ipKey);
         });
+
+        // WP-20260624 — identifier-first account lookup (ADR-0004 §3).
+        // Strict, keyed by BOTH identifier and IP to bound enumeration.
+        RateLimiter::for('lookup', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('auth.throttle.lookup.per_minute', 5);
+            $identifier = (string) $request->input('identifier', '');
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)
+                ->by($identifier !== '' ? 'id:'.sha1($identifier).'|'.$ipKey : 'ip:'.$ipKey);
+        });
+
+        // Identity engine — avatar upload + public profile lookup.
+        // Tunable from admin config (engineering-standards §10).
+        RateLimiter::for('identity-avatar-upload', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('users.avatar.throttle.per_minute', 10);
+            $userId = (string) ($request->user()?->getAuthIdentifier() ?? '');
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by($userId !== '' ? 'u:'.$userId : 'ip:'.$ipKey);
+        });
+
+        RateLimiter::for('identity-public-profile', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('users.public_profile.throttle.anonymous_per_minute', 60);
+            $userId = (string) ($request->user()?->getAuthIdentifier() ?? '');
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by($userId !== '' ? 'u:'.$userId : 'ip:'.$ipKey);
+        });
+
+        // WP-20260530 — registration / email-verify / channel-bind.
+        RateLimiter::for('registration', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('auth.throttle.registration.per_minute', 3);
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by('ip:'.$ipKey);
+        });
+
+        RateLimiter::for('email-verify', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('auth.throttle.email_verify.per_minute', 10);
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by('ip:'.$ipKey);
+        });
+
+        RateLimiter::for('channel-bind', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('auth.throttle.channel_bind.per_minute', 5);
+            $userId = (string) ($request->user()?->getAuthIdentifier() ?? '');
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by($userId !== '' ? 'u:'.$userId : 'ip:'.$ipKey);
+        });
+
+        // Public Zone geography reads — reference data, generous per-IP cap.
+        RateLimiter::for('zone-read', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('zone.throttle.read.per_minute', 60);
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by('ip:'.$ipKey);
+        });
+
+        // User-facing area suggestion — stricter, keyed by submitter.
+        RateLimiter::for('zone-suggest', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('zone.throttle.suggest.per_minute', 5);
+            $userId = (string) ($request->user()?->getAuthIdentifier() ?? '');
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by($userId !== '' ? 'u:'.$userId : 'ip:'.$ipKey);
+        });
     }
 
     private function readConfigInt(string $key, int $fallback): int

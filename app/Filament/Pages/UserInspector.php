@@ -24,7 +24,7 @@ use Filament\Pages\Page;
  * separate from administration concerns.
  *
  * @property-read array<string, mixed> $data
- * @property-read \Filament\Forms\Form $form
+ * @property-read Form $form
  */
 class UserInspector extends Page implements HasForms
 {

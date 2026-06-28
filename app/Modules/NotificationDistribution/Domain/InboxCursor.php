@@ -14,8 +14,7 @@ final readonly class InboxCursor
     public function __construct(
         public string $createdAtIso,
         public string $id,
-    ) {
-    }
+    ) {}
 
     public function encode(): string
     {

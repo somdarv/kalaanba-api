@@ -13,6 +13,5 @@ final readonly class InboxListFilters
     public function __construct(
         public ?InboxStatus $status = null,
         public ?InboxCategory $category = null,
-    ) {
-    }
+    ) {}
 }

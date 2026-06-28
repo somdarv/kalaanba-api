@@ -73,6 +73,21 @@ final class EloquentGeographyReader implements GeographyReader
         );
     }
 
+    public function listCityHubs(): array
+    {
+        return CityHubRecord::query()
+            ->orderBy('name')
+            ->get()
+            ->map(fn (CityHubRecord $r): CityHub => new CityHub(
+                id: (string) $r->getAttribute('id'),
+                regionId: (string) $r->getAttribute('region_id'),
+                code: (string) $r->getAttribute('code'),
+                name: (string) $r->getAttribute('name'),
+            ))
+            ->values()
+            ->all();
+    }
+
     public function listZonesForCityHub(string $cityHubId): array
     {
         return ZoneRecord::query()
@@ -85,14 +100,21 @@ final class EloquentGeographyReader implements GeographyReader
             ->all();
     }
 
-    public function listAreasForCityHub(string $cityHubId): array
+    public function listAreasForCityHub(string $cityHubId, ?string $search = null): array
     {
         $zoneIds = ZoneRecord::query()->where('city_hub_id', $cityHubId)->pluck('id');
 
-        return AreaRecord::query()
+        $query = AreaRecord::query()
             ->whereIn('zone_id', $zoneIds)
-            ->orderBy('name')
-            ->get()
+            ->orderBy('name');
+
+        $needle = $search === null ? '' : trim($search);
+        if ($needle !== '') {
+            // Portable case-insensitive contains (Postgres + sqlite test DB).
+            $query->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($needle).'%']);
+        }
+
+        return $query->get()
             ->map(fn (AreaRecord $r): Area => new Area(
                 id: (string) $r->getAttribute('id'),
                 zoneId: (string) $r->getAttribute('zone_id'),

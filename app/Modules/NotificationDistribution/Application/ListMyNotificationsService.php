@@ -16,12 +16,10 @@ use Kalaanba\Modules\NotificationDistribution\Domain\InboxRepository;
  */
 final class ListMyNotificationsService
 {
-    public function __construct(private readonly InboxRepository $repository)
-    {
-    }
+    public function __construct(private readonly InboxRepository $repository) {}
 
     public function handle(
-        int $recipientUserId,
+        string $recipientUserId,
         InboxListFilters $filters,
         ?InboxCursor $cursor,
         int $limit,

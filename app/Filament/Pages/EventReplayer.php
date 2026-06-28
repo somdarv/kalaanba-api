@@ -28,7 +28,7 @@ use Throwable;
  * idempotent — already-pending rows are unaffected.
  *
  * @property-read array<string, mixed> $data
- * @property-read \Filament\Forms\Form $form
+ * @property-read Form $form
  */
 class EventReplayer extends Page implements HasForms
 {

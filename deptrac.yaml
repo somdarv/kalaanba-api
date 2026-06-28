@@ -64,9 +64,10 @@ deptrac:
       - Support
       - Framework
 
-    # Infrastructure implements Domain ports. Has full framework access.
+    # Infrastructure implements Domain/Application ports. Has full framework access.
     ModuleInfrastructure:
       - ModuleDomain
+      - ModuleApplication
       - Support
       - Framework
 

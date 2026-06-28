@@ -7,6 +7,7 @@ namespace App\Models;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -15,15 +16,19 @@ use Kalaanba\Support\Auth\Role;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
- * @property int $id
+ * @property string $id
  * @property string $name
  * @property string $email
  * @property string $password
  * @property Role $role
  * @property string|null $phone_e164_hash
  * @property string|null $phone_e164_last4
+ * @property string|null $area_id
+ * @property string|null $avatar_url
  * @property Carbon|null $email_verified_at
  * @property Carbon|null $archived_at
+ * @property Carbon|null $disabled_at
+ * @property Carbon|null $claimed_at
  * @property Carbon|null $last_seen_at
  * @property-read bool $is_active
  */
@@ -31,6 +36,7 @@ class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens;
     use HasFactory;
+    use HasUuids;
     use Notifiable;
 
     /**
@@ -46,6 +52,8 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'phone_e164_hash',
         'phone_e164_last4',
+        'area_id',
+        'avatar_url',
     ];
 
     /**
@@ -65,6 +73,8 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'archived_at' => 'datetime',
+            'disabled_at' => 'datetime',
+            'claimed_at' => 'datetime',
             'last_seen_at' => 'datetime',
             'password' => 'hashed',
             'role' => Role::class,
@@ -73,7 +83,9 @@ class User extends Authenticatable implements FilamentUser
 
     protected function isActive(): Attribute
     {
-        return Attribute::get(fn (): bool => $this->archived_at === null);
+        return Attribute::get(
+            fn (): bool => $this->archived_at === null && $this->disabled_at === null,
+        );
     }
 
     /**

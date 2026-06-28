@@ -67,6 +67,7 @@ final class OtpController extends Controller
         $user = User::query()
             ->where('phone_e164_hash', $this->phoneHash->hash($phoneE164))
             ->whereNull('archived_at')
+            ->whereNull('disabled_at')
             ->first();
 
         if ($user === null) {

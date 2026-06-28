@@ -20,7 +20,7 @@ final readonly class NewInboxItem
      *                                         Must NEVER contain secrets/PII/OTPs.
      */
     public function __construct(
-        public int $recipientUserId,
+        public string $recipientUserId,
         public string $templateKey,
         public InboxCategory $category,
         public InboxUrgency $urgency,
@@ -31,6 +31,5 @@ final readonly class NewInboxItem
         public ?string $actionUrl = null,
         public array $payload = [],
         public ?DateTimeImmutable $expiresAt = null,
-    ) {
-    }
+    ) {}
 }

@@ -22,5 +22,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call(AdminConfigSeeder::class);
         $this->call(SuperAdminSeeder::class);
+        $this->call(AdminAccessCodeSeeder::class);
     }
 }

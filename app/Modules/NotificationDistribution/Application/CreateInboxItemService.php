@@ -17,9 +17,7 @@ use Kalaanba\Modules\NotificationDistribution\Domain\NewInboxItem;
  */
 final class CreateInboxItemService
 {
-    public function __construct(private readonly InboxRepository $repository)
-    {
-    }
+    public function __construct(private readonly InboxRepository $repository) {}
 
     public function handle(NewInboxItem $item): string
     {

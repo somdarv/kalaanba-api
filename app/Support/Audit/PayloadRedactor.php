@@ -25,6 +25,7 @@ final class PayloadRedactor
         'token',
         'secret',
         'otp',
+        'access_code',
         'authorization',
         'cookie',
         'api_key',

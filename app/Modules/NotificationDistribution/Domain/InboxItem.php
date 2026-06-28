@@ -16,7 +16,7 @@ final readonly class InboxItem
      */
     public function __construct(
         public string $id,
-        public int $recipientUserId,
+        public string $recipientUserId,
         public string $templateKey,
         public InboxCategory $category,
         public InboxUrgency $urgency,
@@ -31,6 +31,5 @@ final readonly class InboxItem
         public ?DateTimeImmutable $seenAt,
         public ?DateTimeImmutable $actedOnAt,
         public ?DateTimeImmutable $expiresAt,
-    ) {
-    }
+    ) {}
 }

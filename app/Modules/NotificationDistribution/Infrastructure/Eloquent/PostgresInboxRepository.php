@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Kalaanba\Modules\NotificationDistribution\Infrastructure\Eloquent;
 
+use DateTimeImmutable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Kalaanba\Modules\NotificationDistribution\Domain\InboxCategory;
 use Kalaanba\Modules\NotificationDistribution\Domain\InboxCursor;
 use Kalaanba\Modules\NotificationDistribution\Domain\InboxItem;
@@ -13,9 +16,6 @@ use Kalaanba\Modules\NotificationDistribution\Domain\InboxRepository;
 use Kalaanba\Modules\NotificationDistribution\Domain\InboxStatus;
 use Kalaanba\Modules\NotificationDistribution\Domain\InboxUrgency;
 use Kalaanba\Modules\NotificationDistribution\Domain\NewInboxItem;
-use DateTimeImmutable;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use stdClass;
 
 /**
@@ -60,7 +60,7 @@ final class PostgresInboxRepository implements InboxRepository
     }
 
     public function listForRecipient(
-        int $recipientUserId,
+        string $recipientUserId,
         InboxListFilters $filters,
         ?InboxCursor $cursor,
         int $limit,
@@ -108,7 +108,7 @@ final class PostgresInboxRepository implements InboxRepository
         return new InboxPage(array_values($items), $nextCursor);
     }
 
-    public function countUnread(int $recipientUserId, int $cap): array
+    public function countUnread(string $recipientUserId, int $cap): array
     {
         // LIMIT + 1 lets us know whether the true count exceeds the cap
         // without scanning the whole inbox.
@@ -132,7 +132,7 @@ final class PostgresInboxRepository implements InboxRepository
         ];
     }
 
-    public function markSeen(string $id, int $recipientUserId): bool
+    public function markSeen(string $id, string $recipientUserId): bool
     {
         $affected = DB::table(self::TABLE)
             ->where('id', $id)
@@ -152,7 +152,7 @@ final class PostgresInboxRepository implements InboxRepository
         return $affected > 0;
     }
 
-    public function markActedOn(string $id, int $recipientUserId): bool
+    public function markActedOn(string $id, string $recipientUserId): bool
     {
         $affected = DB::table(self::TABLE)
             ->where('id', $id)
@@ -177,7 +177,7 @@ final class PostgresInboxRepository implements InboxRepository
 
         return new InboxItem(
             id: (string) $row->id,
-            recipientUserId: (int) $row->recipient_user_id,
+            recipientUserId: (string) $row->recipient_user_id,
             templateKey: (string) $row->template_key,
             category: InboxCategory::from((string) $row->category),
             urgency: InboxUrgency::from((string) $row->urgency),
