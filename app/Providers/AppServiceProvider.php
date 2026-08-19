@@ -13,6 +13,7 @@ use Illuminate\Support\ServiceProvider;
 use Kalaanba\Support\Audit\AdminAuditWriter;
 use Kalaanba\Support\Audit\DatabaseAdminAuditWriter;
 use Kalaanba\Support\Audit\PayloadRedactor;
+use Kalaanba\Support\Auth\Otp\BmsOtpProvider;
 use Kalaanba\Support\Auth\Otp\CacheOtpStore;
 use Kalaanba\Support\Auth\Otp\CodeGenerator;
 use Kalaanba\Support\Auth\Otp\MockOtpProvider;
@@ -59,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
 
             return match ($providerName) {
                 'mock' => $this->makeMockOtpProvider(),
+                'bms' => $this->makeBmsOtpProvider(),
                 'smsonlinegh' => $this->makeSmsOnlineGhOtpProvider(),
                 default => throw new \RuntimeException(
                     sprintf('Unsupported auth.otp_provider value: %s', $providerName),
@@ -264,6 +266,34 @@ class AppServiceProvider extends ServiceProvider
         }
 
         return app(MockOtpProvider::class);
+    }
+
+    /**
+     * BMS (Bulk Messaging Solutions) — the live driver as of ADR-0009.
+     *
+     * Same env-vs-config split as every other gateway here: the credential is
+     * env-only, the sender ID and wording are admin config (Constitution Law 2).
+     */
+    private function makeBmsOtpProvider(): OtpProvider
+    {
+        $apiKey = (string) config('bms.api_key', '');
+
+        if ($apiKey === '') {
+            throw new \RuntimeException(
+                'auth.otp_provider is "bms" but BMS_API_KEY is empty.',
+            );
+        }
+
+        return new BmsOtpProvider(
+            apiKey: $apiKey,
+            senderId: $this->readConfigString('auth.otp.sms.sender_id', 'Kalaanba'),
+            baseUrl: (string) config('bms.base_url'),
+            timeoutSeconds: (int) config('bms.timeout_seconds', 10),
+            messageTemplate: $this->readConfigString(
+                'auth.otp.sms.message_template',
+                'Your Kalaanba code is {code}. It expires in 5 minutes.',
+            ),
+        );
     }
 
     /**
