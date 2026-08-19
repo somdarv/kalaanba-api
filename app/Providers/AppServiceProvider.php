@@ -20,6 +20,7 @@ use Kalaanba\Support\Auth\Otp\OtpProvider;
 use Kalaanba\Support\Auth\Otp\OtpService;
 use Kalaanba\Support\Auth\Otp\OtpStore;
 use Kalaanba\Support\Auth\Otp\RandomCodeGenerator;
+use Kalaanba\Support\Auth\Otp\SmsOnlineGhOtpProvider;
 use Kalaanba\Support\Auth\PhoneHash;
 use Kalaanba\Support\Auth\Scope\DenyAllScopeResolver;
 use Kalaanba\Support\Auth\Scope\ScopeResolver;
@@ -48,14 +49,17 @@ class AppServiceProvider extends ServiceProvider
         ));
 
         // OTP provider is selected at runtime by the `auth.otp_provider`
-        // config key. Today the only registered implementation is `mock`;
-        // WhatsApp lands in Build Plan Phase 4.
+        // config key. `smsonlinegh` is the live driver (ADR-0008); `mock` is
+        // dev/test only and is refused outright in production, because a mock
+        // in production is a silent black hole — the code is generated, stored
+        // and delivered nowhere, and every surface reports success.
         $this->app->singleton(MockOtpProvider::class);
         $this->app->bind(OtpProvider::class, function () {
             $providerName = $this->resolveOtpProviderName();
 
             return match ($providerName) {
-                'mock' => app(MockOtpProvider::class),
+                'mock' => $this->makeMockOtpProvider(),
+                'smsonlinegh' => $this->makeSmsOnlineGhOtpProvider(),
                 default => throw new \RuntimeException(
                     sprintf('Unsupported auth.otp_provider value: %s', $providerName),
                 ),
@@ -184,6 +188,51 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute($perMinute)->by($userId !== '' ? 'u:'.$userId : 'ip:'.$ipKey);
         });
+
+        // WP-20260702 — player-profile creation. One-per-user + idempotent;
+        // this bounds abusive retries. Keyed by the acting user.
+        RateLimiter::for('player-create', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('player.profile.create.throttle.per_minute', 5);
+            $userId = (string) ($request->user()?->getAuthIdentifier() ?? '');
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by($userId !== '' ? 'u:'.$userId : 'ip:'.$ipKey);
+        });
+
+        // WP-20260819 — public player-profile vocabulary read (ADR-0007).
+        // Reference data, generous per-IP cap like the Zone reads.
+        RateLimiter::for('player-read', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('player.throttle.read.per_minute', 60);
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by('ip:'.$ipKey);
+        });
+
+        // WP-20260702 (WP-C1) — club creation + discovery, keyed by the caller.
+        RateLimiter::for('club-create', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('club.create.throttle.per_minute', 5);
+            $userId = (string) ($request->user()?->getAuthIdentifier() ?? '');
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by($userId !== '' ? 'u:'.$userId : 'ip:'.$ipKey);
+        });
+
+        RateLimiter::for('club-read', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('club.read.throttle.per_minute', 60);
+            $userId = (string) ($request->user()?->getAuthIdentifier() ?? '');
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by($userId !== '' ? 'u:'.$userId : 'ip:'.$ipKey);
+        });
+
+        // WP-20260702 (WP-C2) — affiliation join request + decide, per caller.
+        RateLimiter::for('affiliation-join', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('affiliation.join.throttle.per_minute', 10);
+            $userId = (string) ($request->user()?->getAuthIdentifier() ?? '');
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by($userId !== '' ? 'u:'.$userId : 'ip:'.$ipKey);
+        });
     }
 
     private function readConfigInt(string $key, int $fallback): int
@@ -195,6 +244,72 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return (int) $value->value;
+        } catch (\Throwable) {
+            return $fallback;
+        }
+    }
+
+    /**
+     * The mock provider captures codes in memory and prints them only in the
+     * `local` environment. In production that is indistinguishable from an
+     * outage that nobody is paged for, so refuse it rather than serve it.
+     */
+    private function makeMockOtpProvider(): OtpProvider
+    {
+        if ($this->app->environment('production')) {
+            throw new \RuntimeException(
+                'auth.otp_provider is "mock" in production: OTPs would be generated and '
+                .'delivered nowhere. Set it to a live provider (see ADR-0008).',
+            );
+        }
+
+        return app(MockOtpProvider::class);
+    }
+
+    /**
+     * Built here rather than auto-wired because the credential is env-only
+     * while the sender ID and wording are admin config (Constitution Law 2),
+     * so the two halves come from different places on purpose.
+     */
+    private function makeSmsOnlineGhOtpProvider(): OtpProvider
+    {
+        $apiKey = (string) config('smsonlinegh.api_key', '');
+
+        if ($apiKey === '') {
+            // Fail at resolve time with a message that names the fix. Selecting
+            // a gateway driver with no credential would otherwise surface as a
+            // per-request delivery failure with no hint as to why.
+            throw new \RuntimeException(
+                'auth.otp_provider is "smsonlinegh" but SMSONLINEGH_API_KEY is empty.',
+            );
+        }
+
+        return new SmsOnlineGhOtpProvider(
+            apiKey: $apiKey,
+            // 11 characters is the alphanumeric ceiling, and an UNREGISTERED
+            // sender is accepted by the gateway and then never delivered — see
+            // the provider docblock. Config, so it is fixable without a deploy.
+            senderId: $this->readConfigString('auth.otp.sms.sender_id', 'Kalaanba'),
+            baseUrl: (string) config('smsonlinegh.base_url'),
+            timeoutSeconds: (int) config('smsonlinegh.timeout_seconds', 10),
+            messageTemplate: $this->readConfigString(
+                'auth.otp.sms.message_template',
+                'Your Kalaanba code is {code}. It expires in 5 minutes.',
+            ),
+        );
+    }
+
+    private function readConfigString(string $key, string $fallback): string
+    {
+        try {
+            $value = KxConfig::get($key);
+            if ($value === null) {
+                return $fallback;
+            }
+
+            $resolved = (string) $value->value;
+
+            return $resolved === '' ? $fallback : $resolved;
         } catch (\Throwable) {
             return $fallback;
         }

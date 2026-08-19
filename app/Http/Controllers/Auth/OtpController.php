@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
+use Kalaanba\Support\Auth\Otp\Exceptions\OtpDeliveryFailedException;
 use Kalaanba\Support\Auth\Otp\Exceptions\OtpException;
 use Kalaanba\Support\Auth\Otp\OtpService;
 use Kalaanba\Support\Auth\PhoneHash;
@@ -28,7 +29,21 @@ final class OtpController extends Controller
      */
     public function request(RequestOtpRequest $request): JsonResponse
     {
-        $issuance = $this->otpService->issue($request->validated()['phone_e164']);
+        try {
+            $issuance = $this->otpService->issue($request->validated()['phone_e164']);
+        } catch (OtpDeliveryFailedException $e) {
+            // 503, not 500: nothing about the request was wrong and retrying is
+            // the correct response. The gateway's own reason stays in the log —
+            // it can carry a credential fragment or a subscriber number, and
+            // neither belongs in a client response (engineering-standards §10).
+            return new JsonResponse([
+                'error' => [
+                    'code' => $e->errorCode(),
+                    'message' => 'Could not send the code right now. Please try again.',
+                    'request_id' => (string) $request->header('X-Request-Id', ''),
+                ],
+            ], 503);
+        }
 
         return new JsonResponse([
             'data' => [
