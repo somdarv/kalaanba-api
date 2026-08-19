@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Kalaanba\Support\Auth\Otp;
 
-use Illuminate\Contracts\Foundation\Application;
 
 /**
  * In-memory OTP provider used for development and the test suite.
@@ -34,12 +33,16 @@ final class MockOtpProvider implements OtpProvider
         // Use the framework's resolved environment (reads config/app.env, so it
         // is correct even when the config is cached) rather than raw getenv.
         //
-        // The instanceof is load-bearing, not defensive noise: in a Pest *unit*
-        // test nothing boots the framework, so `app()` hands back a bare
-        // Container, which has no environment() and fatals. Checking the type
-        // rather than just function_exists('app') keeps this provider usable
-        // from a plain unit test — which is exactly where it is meant to be used.
-        if (! function_exists('app') || ! app() instanceof Application) {
+        // `bound('env')` rather than a type check, and this distinction is
+        // load-bearing. In a Pest *unit* test nothing boots the framework, so
+        // app() is a bare Container with no environment(). But a unit test that
+        // merely runs *after* a feature test can be handed a real Application
+        // whose bindings have already been torn down — that passes an
+        // `instanceof Application` check and then fatals with
+        // "Target class [env] does not exist". Asking whether the container can
+        // actually answer the question covers both, and depends on no test
+        // ordering.
+        if (! function_exists('app') || ! app()->bound('env')) {
             return;
         }
 
