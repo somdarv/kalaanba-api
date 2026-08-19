@@ -1,0 +1,42 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-kalaanba-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # A plain ssh step rather than appleboy/ssh-action. That action downloads
+      # its `drone-ssh` binary from GitHub Releases on every run, and a 503
+      # there has repeatedly killed deploys on this box before they ever
+      # reached the server. Plain ssh has no runtime download to fail.
+      #
+      # The server key carries a forced command in ~/.ssh/authorized_keys, so
+      # `exit` below is ignored: the connection runs deploy-kalaanba-api.sh and
+      # streams its output back here. The key cannot obtain a shell.
+      - name: Trigger server deploy
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Host key pinned rather than ssh-keyscan'd. It is public data, so
+          # committing it is safe, and it makes the pin reviewable in git.
+          echo "$SSH_HOST ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIApKUHo3O2KMlU3NjQos9sNsJDmLJUWoyEjn0qFvYJGS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key \
+              -o IdentitiesOnly=yes \
+              -o ConnectTimeout=30 \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=20 \
+              "$SSH_USER@$SSH_HOST" exit
