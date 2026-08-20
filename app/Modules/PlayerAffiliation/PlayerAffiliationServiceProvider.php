@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Kalaanba\Modules\PlayerAffiliation;
 
 use Illuminate\Support\ServiceProvider;
+use Kalaanba\Modules\PlayerAffiliation\Domain\AffiliationRepository;
+use Kalaanba\Modules\PlayerAffiliation\Domain\PlayerRepository;
+use Kalaanba\Modules\PlayerAffiliation\Infrastructure\Eloquent\EloquentAffiliationRepository;
+use Kalaanba\Modules\PlayerAffiliation\Infrastructure\Eloquent\EloquentPlayerRepository;
 
 /**
  * Service provider for the PlayerAffiliation engine module.
@@ -26,7 +30,8 @@ final class PlayerAffiliationServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Bind Domain ports to Infrastructure adapters here.
+        $this->app->bind(PlayerRepository::class, EloquentPlayerRepository::class);
+        $this->app->bind(AffiliationRepository::class, EloquentAffiliationRepository::class);
     }
 
     public function boot(): void

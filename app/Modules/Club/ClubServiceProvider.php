@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Kalaanba\Modules\Club;
 
 use Illuminate\Support\ServiceProvider;
+use Kalaanba\Modules\Club\Domain\ClubReader;
+use Kalaanba\Modules\Club\Domain\ClubRepository;
+use Kalaanba\Modules\Club\Infrastructure\Eloquent\EloquentClubStore;
 
 /**
  * Service provider for the Club engine module.
@@ -26,7 +29,9 @@ final class ClubServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // Bind Domain ports to Infrastructure adapters here.
+        $this->app->singleton(EloquentClubStore::class);
+        $this->app->bind(ClubRepository::class, EloquentClubStore::class);
+        $this->app->bind(ClubReader::class, EloquentClubStore::class);
     }
 
     public function boot(): void

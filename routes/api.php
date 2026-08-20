@@ -11,12 +11,16 @@ use App\Http\Controllers\Auth\LookupController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\RegistrationController;
 use App\Http\Controllers\Auth\SessionController;
+use App\Http\Controllers\Club\AffiliationController;
+use App\Http\Controllers\Club\ClubController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Identity\AvatarController;
 use App\Http\Controllers\Identity\ChannelBindingController;
 use App\Http\Controllers\Identity\MeController;
 use App\Http\Controllers\Identity\UserShowController;
 use App\Http\Controllers\Notifications\MyInboxController;
+use App\Http\Controllers\Player\PlayerController;
+use App\Http\Controllers\Player\PlayerMetaController;
 use App\Http\Controllers\Zone\AreaSuggestionController as ZoneAreaSuggestionController;
 use App\Http\Controllers\Zone\GeographyController as ZoneGeographyController;
 use Illuminate\Support\Facades\Route;
@@ -126,6 +130,58 @@ Route::prefix('v1')->group(function (): void {
         Route::middleware(['auth:sanctum', 'throttle:zone-suggest', 'idempotency'])
             ->post('area-suggestions', [ZoneAreaSuggestionController::class, 'store'])
             ->name('zone.area-suggestions.store');
+    });
+
+    // Player & Affiliation engine — self-service player-profile creation.
+    // Engine doc: docs/engines/player-affiliation/ §4, §22. WP-20260702.
+    Route::prefix('players')->group(function (): void {
+        // Profile-form vocabulary (ADR-0007). Public reference data — no
+        // player, no user, nothing computed; cached at the edge.
+        Route::middleware('throttle:player-read')
+            ->get('meta', [PlayerMetaController::class, 'show'])
+            ->name('players.meta');
+
+        Route::middleware(['auth:sanctum', 'throttle:player-create', 'idempotency'])
+            ->post('/', [PlayerController::class, 'store'])
+            ->name('players.store');
+    });
+
+    // Club engine — create a club + "clubs near you" discovery.
+    // Engine doc: docs/engines/club/ §5, §6, §15. WP-20260702 (WP-C1).
+    Route::prefix('clubs')->middleware('auth:sanctum')->group(function (): void {
+        Route::middleware('throttle:club-read')
+            ->get('/', [ClubController::class, 'index'])
+            ->name('clubs.index');
+
+        // Clubs the caller administers (for the join-request accept surface).
+        Route::middleware('throttle:club-read')
+            ->get('mine', [ClubController::class, 'mine'])
+            ->name('clubs.mine');
+
+        Route::middleware(['throttle:club-create', 'idempotency'])
+            ->post('/', [ClubController::class, 'store'])
+            ->name('clubs.store');
+
+        // Affiliation join lifecycle (Player & Affiliation §8/§11). WP-C2.
+        Route::prefix('{clubId}/join-requests')->whereUuid('clubId')->group(function (): void {
+            Route::middleware('throttle:club-read')
+                ->get('/', [AffiliationController::class, 'index'])
+                ->name('clubs.join-requests.index');
+
+            Route::middleware(['throttle:affiliation-join', 'idempotency'])
+                ->post('/', [AffiliationController::class, 'store'])
+                ->name('clubs.join-requests.store');
+
+            Route::middleware(['throttle:affiliation-join', 'idempotency'])
+                ->post('{affiliationId}/accept', [AffiliationController::class, 'accept'])
+                ->whereUuid('affiliationId')
+                ->name('clubs.join-requests.accept');
+
+            Route::middleware(['throttle:affiliation-join', 'idempotency'])
+                ->post('{affiliationId}/decline', [AffiliationController::class, 'decline'])
+                ->whereUuid('affiliationId')
+                ->name('clubs.join-requests.decline');
+        });
     });
 
     // Identity engine — self profile + public projection.
