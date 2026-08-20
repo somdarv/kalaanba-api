@@ -22,7 +22,7 @@ class AdminConfigSeeder extends Seeder
     {
         $now = (new DateTimeImmutable('now', timezone_open('UTC')))->format('Y-m-d H:i:s');
 
-        DB::table('admin_config')->insertOrIgnore([
+        $this->seedMissing($now, [
             // RP Economy defaults
             [
                 'key' => 'rp.win',
@@ -472,6 +472,276 @@ class AdminConfigSeeder extends Seeder
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
+            // Player & Affiliation engine — profile-form vocabulary + bounds.
+            // Engine doc §3, §6, §12. Registered so an admin can change an option
+            // set, a label, or a bound without a deploy (Constitution Law 2/4).
+            // Served to clients by GET /api/v1/players/meta (ADR-0007).
+            [
+                'key' => 'player.positions',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => json_encode([
+                    'goalkeeper',
+                    'left_back', 'centre_back', 'right_back',
+                    'defensive_midfielder',
+                    'left_midfielder', 'centre_midfielder', 'right_midfielder',
+                    'attacking_midfielder',
+                    'left_winger', 'right_winger',
+                    'second_striker', 'striker',
+                ]),
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'medium',
+                'change_reason' => 'Initial seed: allowed primary-position keys, back-to-front order',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.positions.labels',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => json_encode([
+                    'goalkeeper' => 'Goalkeeper',
+                    'left_back' => 'Left Back',
+                    'centre_back' => 'Centre Back',
+                    'right_back' => 'Right Back',
+                    'defensive_midfielder' => 'Defensive Midfielder',
+                    'left_midfielder' => 'Left Midfielder',
+                    'centre_midfielder' => 'Centre Midfielder',
+                    'right_midfielder' => 'Right Midfielder',
+                    'attacking_midfielder' => 'Attacking Midfielder',
+                    'left_winger' => 'Left Winger',
+                    'right_winger' => 'Right Winger',
+                    'second_striker' => 'Second Striker',
+                    'striker' => 'Striker',
+                    // Retired keys. NOT in `player.positions`, so nobody can pick
+                    // them, but players who chose one before 2026-08-19 still have
+                    // it stored. Labels are a lookup, not an option set: keeping
+                    // these stops an old profile rendering the raw key at people.
+                    'defender' => 'Defender',
+                    'midfielder' => 'Midfielder',
+                    'forward' => 'Forward',
+                ]),
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: display labels for primary positions',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.positions.abbreviations',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => json_encode([
+                    'goalkeeper' => 'GK',
+                    'left_back' => 'LB',
+                    'centre_back' => 'CB',
+                    'right_back' => 'RB',
+                    'defensive_midfielder' => 'DM',
+                    'left_midfielder' => 'LM',
+                    'centre_midfielder' => 'CM',
+                    'right_midfielder' => 'RM',
+                    'attacking_midfielder' => 'AM',
+                    'left_winger' => 'LW',
+                    'right_winger' => 'RW',
+                    'second_striker' => 'SS',
+                    'striker' => 'ST',
+                    // Retired keys, kept for the same reason as the labels above.
+                    'defender' => 'DF',
+                    'midfielder' => 'MF',
+                    'forward' => 'FW',
+                ]),
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: short forms drawn on the pitch picker',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.positions.descriptions',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => json_encode([
+                    'goalkeeper' => 'You keep the ball out of the net.',
+                    'left_back' => 'You defend the left side and help the attack.',
+                    'centre_back' => 'You defend the middle and win headers.',
+                    'right_back' => 'You defend the right side and help the attack.',
+                    'defensive_midfielder' => 'You sit in front of the defence and win the ball.',
+                    'left_midfielder' => 'You run the left side, back and forward.',
+                    'centre_midfielder' => 'You run the middle and set the pace.',
+                    'right_midfielder' => 'You run the right side, back and forward.',
+                    'attacking_midfielder' => 'You create the chances.',
+                    'left_winger' => 'You take players on down the left.',
+                    'right_winger' => 'You take players on down the right.',
+                    'second_striker' => 'You play just behind the striker.',
+                    'striker' => 'You score the goals.',
+                ]),
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: one-line explanation per position',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.availability.default',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => 'unknown',
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: availability preselected when the player omits one',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.availability.labels',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => json_encode([
+                    'available' => 'Available to play',
+                    'limited' => 'Available with notice',
+                    'unavailable' => 'Not available',
+                    'unknown' => 'Not sure yet',
+                ]),
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: display labels for availability states',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.availability.descriptions',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => json_encode([
+                    'available' => 'Clubs building a squad will see you as ready.',
+                    'limited' => 'You will show as playable, with notice needed.',
+                    'unavailable' => 'You stay on the register but out of squad shortlists.',
+                    'unknown' => 'You can set this any time from your profile.',
+                ]),
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: consequence copy shown under each availability option',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.market_status.labels',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => json_encode([
+                    'free_agent' => 'Free agent',
+                    'affiliated' => 'Affiliated',
+                ]),
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: display labels for football market status',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.profile.name_max_length',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => '80',
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: max length of first/last name',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.profile.stage_name_max_length',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => '40',
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: max length of the stage/jersey name',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.profile.preferred_number_min',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => '1',
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: lowest allowed preferred shirt number',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.profile.preferred_number_max',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => '99',
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: highest allowed preferred shirt number',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.profile.preferred_number_quick_picks',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => json_encode([1, 4, 6, 7, 8, 9, 10, 11]),
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: one-tap shirt numbers offered at profile setup',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.profile.create.throttle.per_minute',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => '5',
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: profile-creation rate limit per user',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.throttle.read.per_minute',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => '60',
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: player vocabulary read rate limit per IP',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'key' => 'player.meta.cache_ttl_seconds',
+                'scope' => 'platform',
+                'scope_id' => null,
+                'value' => '300',
+                'effective_from' => $now,
+                'version' => 1,
+                'approval_level' => 'low',
+                'change_reason' => 'Initial seed: Cache-Control max-age for the player vocabulary read',
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
             [
                 'key' => 'users.public_profile.throttle.anonymous_per_minute',
                 'scope' => 'platform',
@@ -485,5 +755,58 @@ class AdminConfigSeeder extends Seeder
                 'updated_at' => $now,
             ],
         ]);
+    }
+
+    /**
+     * Insert only the keys that do not exist yet.
+     *
+     * NOT `insertOrIgnore`. The unique index on `admin_config` is
+     * (key, scope, scope_id, effective_from), and `effective_from` is set to
+     * "now" on every run, so no two runs ever collide and nothing was ever
+     * ignored. Running this seeder twice therefore inserted a complete second
+     * copy of every key, and a local database had accumulated 190 rows for 53
+     * keys before anyone noticed. Reads still worked, which is exactly why it
+     * went unnoticed: `Config::get` takes the newest row and the copies were
+     * identical.
+     *
+     * Existence is checked on (key, scope, scope_id) alone, deliberately
+     * ignoring version and value. A key that already exists may have been
+     * changed by an admin since it was seeded, and a seeder must never
+     * overwrite a governed decision. Changing the value of a key that already
+     * ships is a migration's job, not this one's: see
+     * `2026_08_19_000001_expand_player_positions_config`.
+     *
+     * That makes this safe to run on every deploy, which is the point.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function seedMissing(string $now, array $rows): void
+    {
+        $existing = DB::table('admin_config')
+            ->select('key', 'scope', 'scope_id')
+            ->get()
+            ->map(static fn (object $row): string => $row->key.'|'.$row->scope.'|'.($row->scope_id ?? ''))
+            ->flip();
+
+        $missing = array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => ! $existing->has(
+                $row['key'].'|'.$row['scope'].'|'.($row['scope_id'] ?? ''),
+            ),
+        ));
+
+        if ($missing === []) {
+            $this->command?->info('admin_config: already complete, nothing to seed.');
+
+            return;
+        }
+
+        DB::table('admin_config')->insert($missing);
+
+        $this->command?->info(sprintf(
+            'admin_config: seeded %d new key(s): %s',
+            count($missing),
+            implode(', ', array_column($missing, 'key')),
+        ));
     }
 }
