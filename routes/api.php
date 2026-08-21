@@ -19,6 +19,7 @@ use App\Http\Controllers\Identity\ChannelBindingController;
 use App\Http\Controllers\Identity\MeController;
 use App\Http\Controllers\Identity\UserShowController;
 use App\Http\Controllers\Notifications\MyInboxController;
+use App\Http\Controllers\Player\MyPlayerController;
 use App\Http\Controllers\Player\PlayerController;
 use App\Http\Controllers\Player\PlayerMetaController;
 use App\Http\Controllers\Zone\AreaSuggestionController as ZoneAreaSuggestionController;
@@ -144,6 +145,18 @@ Route::prefix('v1')->group(function (): void {
         Route::middleware(['auth:sanctum', 'throttle:player-create', 'idempotency'])
             ->post('/', [PlayerController::class, 'store'])
             ->name('players.store');
+
+        // The owner's own record, behind /me. Read is throttled as a read;
+        // the write carries Idempotency-Key like every user-triggered write
+        // (Constitution Law 14) — mobile networks retry.
+        Route::middleware(['auth:sanctum', 'throttle:player-read'])
+            ->get('me', [MyPlayerController::class, 'show'])
+            ->name('players.me');
+
+        Route::middleware(['auth:sanctum', 'throttle:player-create', 'idempotency'])
+            ->patch('{playerId}', [MyPlayerController::class, 'update'])
+            ->whereUuid('playerId')
+            ->name('players.update');
     });
 
     // Club engine — create a club + "clubs near you" discovery.

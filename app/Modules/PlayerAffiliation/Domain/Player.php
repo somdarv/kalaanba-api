@@ -30,4 +30,43 @@ final readonly class Player
         public ?string $headshotUrl,
         public DateTimeImmutable $createdAt,
     ) {}
+
+    /**
+     * A copy carrying an owner's profile edits (engine doc §6).
+     *
+     * Only the fields `PATCH /players/{id}` accepts can move. `marketStatus`,
+     * `claimStatus` and `id` are absent by construction, not by convention:
+     * market status follows affiliation (§8), claim status follows the claim
+     * flow (§4), and neither is the player's to set. A caller that wants to
+     * change one cannot express it through this method, which is the point.
+     *
+     * `null` means "clear it" for the two nullable fields, so callers pass the
+     * already-resolved value rather than a sentinel. Deciding whether an absent
+     * key means "leave alone" belongs to the request layer, where the raw
+     * payload still exists.
+     */
+    public function withProfile(
+        string $firstName,
+        string $lastName,
+        string $stageName,
+        ?int $preferredNumber,
+        ?string $primaryPosition,
+        PlayerAvailability $availability,
+        ?string $headshotUrl,
+    ): self {
+        return new self(
+            id: $this->id,
+            userId: $this->userId,
+            firstName: $firstName,
+            lastName: $lastName,
+            stageName: $stageName,
+            preferredNumber: $preferredNumber,
+            primaryPosition: $primaryPosition,
+            availability: $availability,
+            marketStatus: $this->marketStatus,
+            claimStatus: $this->claimStatus,
+            headshotUrl: $headshotUrl,
+            createdAt: $this->createdAt,
+        );
+    }
 }
