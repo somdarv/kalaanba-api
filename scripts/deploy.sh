@@ -40,6 +40,22 @@ echo "==> Seeding configuration (adds missing keys only)"
 # through a migration above.
 $PHP artisan db:seed --class=AdminConfigSeeder --force
 
+echo "==> Seeding Zone geography (adds missing rows only)"
+# ADDED 2026-08-21. Same argument as the config seed above: without it the
+# thirteen City Hubs and their Areas reach production only if somebody
+# remembers the command, and the area picker keeps serving the single Tamale
+# row it was bootstrapped with.
+#
+# Safe on every deploy. Ids are deterministic UUIDv5 and every write is
+# insertOrIgnore, so a re-run changes nothing and rows other tables already
+# reference keep their ids. It never updates an existing row, so an admin
+# rename or an Area remapped to a different Zone survives the next deploy.
+#
+# Deliberately NOT in DatabaseSeeder: tests/TestCase.php sets `$seed = true`,
+# so DatabaseSeeder runs before every test, and putting it there gave all of
+# them thirteen hubs and fifty-five areas.
+$PHP artisan db:seed --class=GhanaGeographySeeder --force
+
 echo "==> Publishing Filament assets"
 $PHP artisan filament:assets
 
