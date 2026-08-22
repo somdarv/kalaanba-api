@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Kalaanba\Modules\PlayerAffiliation;
 
 use Illuminate\Support\ServiceProvider;
+use Kalaanba\Modules\PlayerAffiliation\Application\PlayerMediaDriver;
 use Kalaanba\Modules\PlayerAffiliation\Domain\AffiliationRepository;
 use Kalaanba\Modules\PlayerAffiliation\Domain\PlayerRepository;
 use Kalaanba\Modules\PlayerAffiliation\Domain\VerifiedStatsReader;
 use Kalaanba\Modules\PlayerAffiliation\Infrastructure\Eloquent\EloquentAffiliationRepository;
 use Kalaanba\Modules\PlayerAffiliation\Infrastructure\Eloquent\EloquentPlayerRepository;
 use Kalaanba\Modules\PlayerAffiliation\Infrastructure\EmptyVerifiedStats;
+use Kalaanba\Modules\PlayerAffiliation\Infrastructure\Media\PlayerMediaDriverFactory;
 
 /**
  * Service provider for the PlayerAffiliation engine module.
@@ -43,6 +45,15 @@ final class PlayerAffiliationServiceProvider extends ServiceProvider
         // This binding is the §13 gate. There is no other route by which a
         // number can reach a player's profile totals.
         $this->app->bind(VerifiedStatsReader::class, EmptyVerifiedStats::class);
+
+        // Player media (§7). Resolved through the factory rather than bound to
+        // a concrete class, because the choice is config and config is read at
+        // request time — binding the class here would freeze whichever driver
+        // was configured when the container booted.
+        $this->app->bind(
+            PlayerMediaDriver::class,
+            static fn ($app): PlayerMediaDriver => $app->make(PlayerMediaDriverFactory::class)->make(),
+        );
     }
 
     public function boot(): void
