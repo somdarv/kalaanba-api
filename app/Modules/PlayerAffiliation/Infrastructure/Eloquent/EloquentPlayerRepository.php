@@ -11,6 +11,7 @@ use Kalaanba\Modules\PlayerAffiliation\Domain\PlayerAvailability;
 use Kalaanba\Modules\PlayerAffiliation\Domain\PlayerClaimStatus;
 use Kalaanba\Modules\PlayerAffiliation\Domain\PlayerMarketStatus;
 use Kalaanba\Modules\PlayerAffiliation\Domain\PlayerRepository;
+use RuntimeException;
 
 final class EloquentPlayerRepository implements PlayerRepository
 {
@@ -50,6 +51,32 @@ final class EloquentPlayerRepository implements PlayerRepository
             'headshot_url' => $player->headshotUrl,
             'created_at' => Carbon::instance($player->createdAt),
             'updated_at' => Carbon::instance($player->createdAt),
+        ])->save();
+
+        return $this->map($record->refresh());
+    }
+
+    public function update(Player $player): Player
+    {
+        /** @var PlayerRecord|null $record */
+        $record = PlayerRecord::query()->whereNull('archived_at')->find($player->id);
+        if ($record === null) {
+            throw new RuntimeException("Player {$player->id} is missing or archived.");
+        }
+
+        // Explicit column list rather than a blanket fill. `$guarded = []` on
+        // this model means anything handed in would be written, and the whole
+        // value of routing edits through the domain entity is that market
+        // status, claim status and ownership cannot travel with them.
+        $record->forceFill([
+            'first_name' => $player->firstName,
+            'last_name' => $player->lastName,
+            'stage_name' => $player->stageName,
+            'preferred_number' => $player->preferredNumber,
+            'primary_position' => $player->primaryPosition,
+            'availability_status' => $player->availability->value,
+            'headshot_url' => $player->headshotUrl,
+            'updated_at' => Carbon::now('UTC'),
         ])->save();
 
         return $this->map($record->refresh());

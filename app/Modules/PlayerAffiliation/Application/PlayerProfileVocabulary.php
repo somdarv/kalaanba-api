@@ -81,6 +81,7 @@ final class PlayerProfileVocabulary
         $availabilityLabels = $this->labelMap('player.availability.labels', $locale);
         $availabilityNotes = $this->labelMap('player.availability.descriptions', $locale);
         $marketLabels = $this->labelMap('player.market_status.labels', $locale);
+        $confidenceLabels = $this->labelMap('player.card_confidence.labels', $locale);
 
         $bounds = $this->bounds();
 
@@ -127,6 +128,18 @@ final class PlayerProfileVocabulary
                 'max_length' => $bounds['name_max_length'],
                 'stage_name_max_length' => $bounds['stage_name_max_length'],
             ],
+            // Card-confidence labels (§14). Keys come from the LADDER
+            // (`player.card_confidence.tiers`), not from the label map, so a
+            // half-written map degrades to raw keys instead of dropping a tier
+            // a player can actually reach. Additive to the v1 contract and
+            // therefore non-breaking (§7).
+            'card_confidence' => array_map(
+                fn (string $key): array => [
+                    'key' => $key,
+                    'label' => $confidenceLabels[$key] ?? $key,
+                ],
+                $this->confidenceTierKeys(),
+            ),
         ];
     }
 
@@ -146,6 +159,45 @@ final class PlayerProfileVocabulary
         $keys = array_values(array_filter($decoded, 'is_string'));
 
         return $keys === [] ? self::POSITION_FALLBACK : $keys;
+    }
+
+    /**
+     * Tier keys from the confidence ladder, ascending.
+     *
+     * Reads the ladder rather than the label map because the ladder is what
+     * decides which tiers EXIST. Falls back to the same structural default
+     * `CardConfidenceLadder` uses, so the vocabulary and the resolver can never
+     * disagree about the set.
+     *
+     * @return list<string>
+     */
+    public function confidenceTierKeys(): array
+    {
+        $decoded = $this->jsonConfig('player.card_confidence.tiers');
+        if ($decoded === null) {
+            return ['provisional', 'growing', 'verified'];
+        }
+
+        $tiers = [];
+        foreach ($decoded as $entry) {
+            if (! is_array($entry)) {
+                continue;
+            }
+            $key = $entry['key'] ?? null;
+            $min = $entry['min_confirmed_matches'] ?? null;
+            if (! is_string($key) || $key === '' || ! is_numeric($min)) {
+                continue;
+            }
+            $tiers[$key] = (int) $min;
+        }
+
+        if ($tiers === []) {
+            return ['provisional', 'growing', 'verified'];
+        }
+
+        asort($tiers);
+
+        return array_keys($tiers);
     }
 
     /**
