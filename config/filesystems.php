@@ -56,6 +56,42 @@ return [
             'throw' => false,
         ],
 
+        /*
+         * Cloudflare R2, over its S3-compatible API.
+         *
+         * Three settings are not negotiable and are the ones people get wrong:
+         *
+         *  - region is the literal string 'auto'. R2 has no regions; the SDK
+         *    still demands one to build a signature.
+         *  - use_path_style_endpoint is true. Virtual-host style would resolve
+         *    {bucket}.{account}.r2.cloudflarestorage.com, which does not exist.
+         *  - the credentials are the S3 key pair from R2 > Manage R2 API
+         *    Tokens, NOT a Cloudflare account API token. The two look alike and
+         *    only one authenticates here.
+         *
+         * `url` is deliberately absent. R2's S3 endpoint is private and is not
+         * the address a browser fetches from, so letting Flysystem derive a URL
+         * from it would produce links that resolve for nobody. The public base
+         * URL lives in `player.media.r2.public_url` and the driver builds the
+         * address itself.
+         *
+         * `throw` is true, unlike the s3 disk above: a failed upload must
+         * surface as an error the caller can report, not as a silent false that
+         * leaves the player looking at an unchanged card.
+         */
+        'r2' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => 'auto',
+            'bucket' => env('R2_BUCKET', 'kalaanba-dev-storage'),
+            'endpoint' => env('R2_ACCOUNT_ID')
+                ? 'https://'.env('R2_ACCOUNT_ID').'.r2.cloudflarestorage.com'
+                : null,
+            'use_path_style_endpoint' => true,
+            'throw' => true,
+        ],
+
     ],
 
     /*

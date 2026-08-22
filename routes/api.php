@@ -20,6 +20,7 @@ use App\Http\Controllers\Identity\MeController;
 use App\Http\Controllers\Identity\UserShowController;
 use App\Http\Controllers\Notifications\MyInboxController;
 use App\Http\Controllers\Player\MyPlayerController;
+use App\Http\Controllers\Player\PlayerMediaController;
 use App\Http\Controllers\Player\PlayerController;
 use App\Http\Controllers\Player\PlayerMetaController;
 use App\Http\Controllers\Zone\AreaSuggestionController as ZoneAreaSuggestionController;
@@ -157,6 +158,15 @@ Route::prefix('v1')->group(function (): void {
             ->patch('{playerId}', [MyPlayerController::class, 'update'])
             ->whereUuid('playerId')
             ->name('players.update');
+
+        // Player media (§7). Its own throttle, because an upload costs orders
+        // of magnitude more than a profile patch and the two should not share
+        // a budget: a player fixing their photo must not exhaust the allowance
+        // that lets them mark themselves available.
+        Route::middleware(['auth:sanctum', 'throttle:player-media-upload', 'idempotency'])
+            ->post('{playerId}/media', [PlayerMediaController::class, 'store'])
+            ->whereUuid('playerId')
+            ->name('players.media.store');
     });
 
     // Club engine — create a club + "clubs near you" discovery.

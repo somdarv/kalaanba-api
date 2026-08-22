@@ -69,4 +69,31 @@ final readonly class Player
             createdAt: $this->createdAt,
         );
     }
+
+    /**
+     * A copy pointing at a newly stored photo (engine doc §7).
+     *
+     * Narrower than {@see withProfile} on purpose. An upload changes exactly
+     * one field, and routing it through the wide method would mean the media
+     * use case had to restate the player's name, number and availability to
+     * change a URL — six chances to write back a stale value read a moment
+     * earlier.
+     */
+    public function withHeadshotUrl(?string $headshotUrl): self
+    {
+        return new self(
+            id: $this->id,
+            userId: $this->userId,
+            firstName: $this->firstName,
+            lastName: $this->lastName,
+            stageName: $this->stageName,
+            preferredNumber: $this->preferredNumber,
+            primaryPosition: $this->primaryPosition,
+            availability: $this->availability,
+            marketStatus: $this->marketStatus,
+            claimStatus: $this->claimStatus,
+            headshotUrl: $headshotUrl,
+            createdAt: $this->createdAt,
+        );
+    }
 }
