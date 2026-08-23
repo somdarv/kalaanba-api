@@ -28,6 +28,14 @@ use Illuminate\Support\Facades\DB;
  * therefore the product's own, from PRODUCT.md 11 and the Zone doc examples.
  * Four hubs have no Areas at all; the suggestion flow (5) is how they fill.
  *
+ * EXPANDED 2026-08-23 (WP-20260823-club-creation). Tamale went from 17 Areas
+ * to 44: a club being created could not find the area it plays from, which is
+ * the launch market failing at the first question that matters. Re-running
+ * Google would not have helped and was not attempted again; the finding above
+ * still holds. The additions are Tamale Metropolitan and Sagnarigu
+ * neighbourhoods and they need a local review before they are trusted: a name
+ * that lands here becomes somewhere a player calls home.
+ *
  * ZONES ARE PROVISIONAL. The Zone doc defines a Zone as a competitive division
  * and an Area as the locality a club represents, while PRODUCT.md 11 lists
  * Tamale's eight localities under the heading "Zones". Which localities group
@@ -126,22 +134,49 @@ class GhanaGeographySeeder extends Seeder
                 'zone_name' => 'Tamale Central',
                 'areas' => [
                     'Aboabo',
+                    'Bagabaga',
+                    'Banvim',
                     'Bulpela',
+                    'Changli',
                     'Checko',
                     'Choggu',
+                    'Dabokpa',
+                    'Datoyili',
+                    'Dungu',
+                    'Education Ridge',
+                    'Fuo',
+                    'Gumani',
                     'Gumbihini',
+                    'Gurugu',
+                    'Jakariyili',
+                    'Jisonayili',
+                    'Kalariga',
                     'Kalpohin',
                     'Kanvile',
                     'Kasalgo',
+                    'Kpalsi',
+                    'Kpanvo',
                     'Kukuo',
                     'Lamashegu',
+                    'Malshegu',
+                    'Moshie Zongo',
                     'NORRIP Village',
+                    'Nyanshegu',
                     'Nyohini',
+                    'Russian Bungalow',
                     'Sagnarigu',
                     'Sakasaka',
+                    'Shishegu',
+                    'Sognaayili',
                     'Taha',
                     'Tishigu',
+                    'Tutingli',
                     'Vittin',
+                    'Warizehi',
+                    'Waterworks',
+                    'Yapalsi',
+                    'Zogbeli',
+                    'Zujung',
                 ],
             ],
             [

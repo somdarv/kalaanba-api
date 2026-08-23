@@ -239,6 +239,18 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute($perMinute)->by($userId !== '' ? 'u:'.$userId : 'ip:'.$ipKey);
         });
 
+        // WP-20260823 — club crest upload. Keyed by the acting user rather than
+        // by IP: one club's wifi or an internet cafe is the ordinary case here,
+        // and an IP key would let one admin's retries lock out everyone beside
+        // them.
+        RateLimiter::for('club-media-upload', function (Request $request): Limit {
+            $perMinute = $this->readConfigInt('club.media.throttle.per_minute', 10);
+            $userId = (string) ($request->user()?->getAuthIdentifier() ?? '');
+            $ipKey = (string) ($request->ip() ?? 'unknown');
+
+            return Limit::perMinute($perMinute)->by($userId !== '' ? 'u:'.$userId : 'ip:'.$ipKey);
+        });
+
         // WP-20260702 (WP-C2) — affiliation join request + decide, per caller.
         RateLimiter::for('affiliation-join', function (Request $request): Limit {
             $perMinute = $this->readConfigInt('affiliation.join.throttle.per_minute', 10);

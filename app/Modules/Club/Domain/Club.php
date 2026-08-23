@@ -18,11 +18,23 @@ final readonly class Club
         public string $id,
         public string $name,
         public string $clubType,
+        public ClubTier $tier,
         public string $cityHubId,
         public string $areaId,
         public ?string $crestUrl,
         public ClubMaturity $maturity,
+        public ClubVerificationState $verificationState,
+        public ?ClubVerificationSource $verificationSource,
         public string $createdByUserId,
         public DateTimeImmutable $createdAt,
     ) {}
+
+    /**
+     * Whether this club may be shown to someone who does not administer it
+     * (ADR-0017). Delegates to the state so the rule is stated once.
+     */
+    public function isPubliclyVisible(): bool
+    {
+        return $this->verificationState->isPubliclyVisible();
+    }
 }
