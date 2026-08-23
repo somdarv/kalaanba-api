@@ -9,7 +9,21 @@ namespace Kalaanba\Modules\Club\Domain;
  */
 interface ClubReader
 {
+    /**
+     * A club anyone may see: not archived, and not an unproven claim on
+     * another club's name (ADR-0017).
+     */
     public function findById(string $id): ?Club;
+
+    /**
+     * The same lookup WITHOUT the pending-verification filter.
+     *
+     * For the two callers that must see a club its own Owner can see but the
+     * public cannot: the admin review queue, and the club's own management
+     * surface. Never reachable from a public read path, and a caller reaching
+     * for this should be able to say which of those two it is.
+     */
+    public function findByIdIncludingUnverified(string $id): ?Club;
 
     /**
      * Non-archived clubs in an Area, newest-first, capped at $limit.

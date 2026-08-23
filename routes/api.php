@@ -13,6 +13,8 @@ use App\Http\Controllers\Auth\RegistrationController;
 use App\Http\Controllers\Auth\SessionController;
 use App\Http\Controllers\Club\AffiliationController;
 use App\Http\Controllers\Club\ClubController;
+use App\Http\Controllers\Club\ClubCrestController;
+use App\Http\Controllers\Club\ClubMetaController;
 use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Identity\AvatarController;
 use App\Http\Controllers\Identity\ChannelBindingController;
@@ -20,8 +22,8 @@ use App\Http\Controllers\Identity\MeController;
 use App\Http\Controllers\Identity\UserShowController;
 use App\Http\Controllers\Notifications\MyInboxController;
 use App\Http\Controllers\Player\MyPlayerController;
-use App\Http\Controllers\Player\PlayerMediaController;
 use App\Http\Controllers\Player\PlayerController;
+use App\Http\Controllers\Player\PlayerMediaController;
 use App\Http\Controllers\Player\PlayerMetaController;
 use App\Http\Controllers\Zone\AreaSuggestionController as ZoneAreaSuggestionController;
 use App\Http\Controllers\Zone\GeographyController as ZoneGeographyController;
@@ -171,6 +173,17 @@ Route::prefix('v1')->group(function (): void {
 
     // Club engine — create a club + "clubs near you" discovery.
     // Engine doc: docs/engines/club/ §5, §6, §15. WP-20260702 (WP-C1).
+    //
+    // Creation-form vocabulary (ADR-0007). Sits OUTSIDE the auth group below
+    // because it is public reference data: tiers, club types and name bounds,
+    // no club and no user. Registered before the group so `clubs/meta` is never
+    // shadowed by a future `clubs/{clubId}` pattern.
+    Route::prefix('clubs')->group(function (): void {
+        Route::middleware('throttle:club-read')
+            ->get('meta', [ClubMetaController::class, 'show'])
+            ->name('clubs.meta');
+    });
+
     Route::prefix('clubs')->middleware('auth:sanctum')->group(function (): void {
         Route::middleware('throttle:club-read')
             ->get('/', [ClubController::class, 'index'])
@@ -184,6 +197,14 @@ Route::prefix('v1')->group(function (): void {
         Route::middleware(['throttle:club-create', 'idempotency'])
             ->post('/', [ClubController::class, 'store'])
             ->name('clubs.store');
+
+        // Club crest (engine doc §5 step 6). Its own throttle: an upload costs
+        // orders of magnitude more than a read and the two must not share a
+        // budget. WP-20260823-club-creation.
+        Route::middleware(['throttle:club-media-upload', 'idempotency'])
+            ->post('{clubId}/crest', [ClubCrestController::class, 'store'])
+            ->whereUuid('clubId')
+            ->name('clubs.crest.store');
 
         // Affiliation join lifecycle (Player & Affiliation §8/§11). WP-C2.
         Route::prefix('{clubId}/join-requests')->whereUuid('clubId')->group(function (): void {

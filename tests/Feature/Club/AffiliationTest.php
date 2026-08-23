@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Kalaanba\Modules\Club\Application\CreateClub;
+use Kalaanba\Modules\Club\Domain\ClubTier;
 use Kalaanba\Modules\PlayerAffiliation\Application\CreatePlayerProfile;
 use Kalaanba\Modules\PlayerAffiliation\Domain\PlayerAvailability;
 use Laravel\Sanctum\Sanctum;
@@ -36,6 +37,7 @@ function makeClubOwnedBy(User $owner): string
     return test()->createClub->execute(
         name: 'Bantama Boys',
         clubType: 'community',
+        tier: ClubTier::Amateur,
         cityHubId: test()->cityHubId,
         areaId: test()->areaId,
         crestUrl: null,
