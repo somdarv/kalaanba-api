@@ -817,7 +817,7 @@ class AdminConfigSeeder extends Seeder
                 'key' => 'club.tiers.descriptions',
                 'scope' => 'platform',
                 'scope_id' => null,
-                'value' => '{"amateur": "Friends, a community side, a school or work team.", "professional": "A registered club or academy. We check before it goes live."}',
+                'value' => '{"amateur": "Friends, a community, a school or work team.", "professional": "A registered club or academy. We check before it goes live."}',
                 'effective_from' => $now,
                 'version' => 1,
                 'approval_level' => 'low',
